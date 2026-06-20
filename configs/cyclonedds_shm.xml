@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Cyclone DDS tuned config + Iceoryx shared memory. Same loopback/discovery
+  settings as cyclonedds_tuned.xml, plus <SharedMemory><Enable>true</Enable>.
+  Zero-copy only engages for fixed-size types (use the benchmark's --fixed mode)
+  and requires the iox-roudi daemon running (see rmw_matrix.py).
+-->
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+    <Domain id="any">
+        <General>
+            <Interfaces>
+                <NetworkInterface name="lo" multicast="true"/>
+            </Interfaces>
+            <AllowMulticast>spdp</AllowMulticast>
+            <MaxMessageSize>65500B</MaxMessageSize>
+        </General>
+        <Discovery>
+            <ParticipantIndex>none</ParticipantIndex>
+        </Discovery>
+        <SharedMemory>
+            <Enable>true</Enable>
+            <LogLevel>warn</LogLevel>
+        </SharedMemory>
+    </Domain>
+</CycloneDDS>
