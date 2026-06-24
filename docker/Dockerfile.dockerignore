@@ -1,0 +1,9 @@
+# Build context is the repo root. The image only needs bench_nodes/, configs/,
+# scripts/, and docker/ — keep results, git, and build junk out of the context.
+.git/
+results/
+**/build/
+**/install/
+**/log/
+**/__pycache__/
+*.pyc
