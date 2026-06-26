@@ -76,9 +76,9 @@ preflight() {
   echo "preflight: /dev/shm=$(( ${shm:-0} / 1024 / 1024 ))MB  net.core.wmem_max=${wmem:-?}  (run uses --ipc=host)"
   [ -n "$shm" ] && [ "$shm" -lt 1073741824 ] && \
     echo "  WARNING: /dev/shm < 1GB — Zenoh / Cyclone-Iceoryx SHM pools may not fit." >&2
-  if [ -n "$wmem" ] && [ "$wmem" -lt 1048576 ]; then
-    echo "  NOTE: net.core.wmem_max < 1MB; the Unix-socket RMW asks for larger buffers but the kernel clamps to this." >&2
-    echo "  Optional, for large messages: sudo sysctl -w net.core.wmem_max=16777216 net.core.rmem_max=16777216" >&2
+  if [ -n "$wmem" ] && [ "$wmem" -lt 50331648 ]; then
+    echo "  NOTE: rmw_unix_socket_cpp requests a 48 MiB socket buffer (SO_SNDBUF/SO_RCVBUF=50331648); net.core.wmem_max=${wmem} clamps it. Fine for this benchmark's message sizes." >&2
+    echo "  To match what the RMW asks for (e.g. for larger messages): sudo sysctl -w net.core.wmem_max=50331648 net.core.rmem_max=50331648" >&2
   fi
 }
 
