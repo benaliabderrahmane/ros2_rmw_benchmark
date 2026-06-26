@@ -3,14 +3,18 @@
   Fast DDS scaling profile. The dominant large-node-count failure mode is the
   default mutation_tries=100: once a host has ~100 participants, new ones can no
   longer claim a unique unicast listening port and silently go "deaf"
-  (eProsima/Fast-DDS#5767). In ROS 2 Release builds the warning is compiled out,
-  so the failure is invisible. Raising mutation_tries lets participants keep
+  (eProsima/Fast-DDS#6383, which #5767 dedups to). In ROS 2 Release builds the
+  warning is compiled out, so the failure is invisible. Raising mutation_tries
+  to 1000 is the maintainers' recommended mitigation; it lets participants keep
   probing for a free port. Applied to every participant via
   FASTDDS_DEFAULT_PROFILES_FILE + RMW_FASTRTPS_USE_QOS_FROM_XML=1.
 
-  Note: simple discovery still collides with the next domain's ports beyond
-  ~119 participants/domain on one host, so the tuned run also uses a Discovery
-  Server (see rmw_matrix.py).
+  Discovery stays simple (SPDP). A Discovery Server was tried to get past the
+  ~119-participants/host port-collision ceiling, but it collapses when many
+  nodes start at once (#6383) and brought up 0/200, worse than simple discovery,
+  so it was dropped (see rmw_matrix.py). At 200 simultaneous participants on one
+  host, simple discovery is itself slow (an O(N^2) storm) -- a real Fast DDS
+  limitation, not something this profile can tune away.
 -->
 <dds xmlns="http://www.eprosima.com">
     <profiles>

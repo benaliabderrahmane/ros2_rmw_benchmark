@@ -15,9 +15,6 @@ from dataclasses import dataclass, field
 # (the Dockerfile copies both under /benchmarks), so this resolves in both.
 CONFIGS_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "configs"))
 
-# Fast DDS Discovery Server endpoint used by the tuned Fast DDS variant.
-FASTDDS_DS = "127.0.0.1:11811"
-
 
 @dataclass
 class RunSpec:
@@ -44,21 +41,28 @@ def _cyclone_tuned():
 
 def _fastdds_tuned():
     xml = os.path.join(CONFIGS_DIR, "fastdds_tuned.xml")
-    # Simple discovery cannot exceed ~119 participants/domain on one host, so
-    # the tuned profile also routes discovery through a Discovery Server. The
-    # mutation_tries bump (issue #5767) keeps participants from going "deaf".
+    # mutation_tries=1000 is eProsima's recommended fix for participants going
+    # "deaf" when they cannot claim a unicast listening port (Fast-DDS#6383,
+    # which #5767 dedups to; posted by the maintainers in that thread).
+    #
+    # We deliberately do NOT use a Discovery Server here. It was supposed to get
+    # past the ~119-participants/host simple-discovery ceiling, but it has a
+    # documented collapse when many nodes start at once (#6383): it brought up
+    # 0/200 in our run, worse than plain simple discovery. We also tested raising
+    # domainIDGain to move the port-collision ceiling past 200; it did not help,
+    # because the real bottleneck at 200 participants on one host is the O(N^2)
+    # simple-discovery traffic storm (discovery ~150 s, ~1/3 of nodes up even
+    # with a 3-minute window). So simple discovery + mutation_tries is the
+    # fairer tuned config; Fast DDS at 200 simultaneous nodes on one host is a
+    # real limitation, not a config we can tune away.
     return RunSpec(
         key="fastdds_tuned", rmw="rmw_fastrtps_cpp", config="tuned",
         env={
             "FASTDDS_DEFAULT_PROFILES_FILE": xml,
             "RMW_FASTRTPS_USE_QOS_FROM_XML": "1",
-            "ROS_DISCOVERY_SERVER": FASTDDS_DS,
-            "ROS_SUPER_CLIENT": "TRUE",
         },
-        daemon_cmd=["fastdds", "discovery", "-i", "0",
-                    "-l", FASTDDS_DS.split(":")[0], "-p", FASTDDS_DS.split(":")[1]],
         config_files={"FASTDDS_DEFAULT_PROFILES_FILE": xml},
-        notes="mutation_tries=1000 + Discovery Server (simple discovery caps at ~119/domain)",
+        notes="simple discovery + mutation_tries=1000 (Discovery Server dropped: collapses at scale, Fast-DDS#6383)",
     )
 
 
