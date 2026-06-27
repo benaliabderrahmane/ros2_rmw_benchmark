@@ -144,7 +144,7 @@ The cyclonedds_default CPU is survivors-only from 50 nodes on, same as its RAM.
 | zenoh_default | 90.7 | 488.4 | 429.0 | 364.4 | 295.3 (survivors-only) |
 | zenoh_tuned | 90.9 | 457.1 | 424.2 | 353.9 (survivors-only) | 294.7 (survivors-only) |
 
-At 1 node, Cyclone (88 us) and Zenoh (91 us) post a lower p50 than unix_socket (127 us). The small-count latency win goes to the DDS stacks. The point of this benchmark is what happens as N grows: unix_socket's p50 stays flat (127 down to 124), while the others climb or blow up.
+At 1 node, Cyclone (89 us) and Zenoh (91 us) post a lower p50 than unix_socket (128 us). The small-count latency win goes to the DDS stacks. The point of this benchmark is what happens as N grows: unix_socket's p50 stays flat (128 down to 123), while the others climb or blow up.
 
 ### p99 latency (us)
 
@@ -238,11 +238,11 @@ The Iceoryx daemon pool is about 640 MB and barely moves with N. That is the cos
 
 The other shm variants do the same thing at 200 nodes as they did in the string run, in some cases worse. From the run logs at 200 nodes:
 
-- **cyclonedds_tuned**: 86% up, 63% delivery, discovery 28.64 s, 6.0 GB, p50 14696 us, p99 524228 us (~0.52 s).
-- **fastdds_default**: 30% up, 12% delivery, discovery 33.38 s, 3.8 GB, p50 121956 us, p99 1068172 us (~1.07 s).
-- **fastdds_shm** (data-sharing zero-copy): holds to 100 nodes (100% up, 97% delivery, p99 487 us at 100), then 34% up, 19% delivery, discovery 79.8 s, 4.4 GB, p99 539688 us (~0.54 s) at 200. No measurable gain over fastdds_default.
-- **zenoh_default**: 100% up, 94% delivery, discovery 6.96 s, about 11 GB, p99 17346 us (~17 ms) at 200.
-- **zenoh_tuned**: 99% up, 94% delivery, discovery 11.71 s, about 11 GB, p99 14857 us (~15 ms) at 200.
+- **cyclonedds_tuned**: 98% up, 82% delivery, discovery 20.86 s, 6.8 GB, p50 4490 us, p99 456460 us (~0.46 s).
+- **fastdds_default**: 32% up, 14% delivery, discovery 74.83 s, 3.7 GB, p50 88880 us, p99 1125794 us (~1.13 s).
+- **fastdds_shm** (data-sharing zero-copy): holds to 100 nodes (100% up, 96% delivery, p99 488 us at 100), then 23.5% up, 12% delivery, discovery 79.23 s, 4.0 GB, p99 1412231 us (~1.41 s) at 200. No measurable gain over fastdds_default.
+- **zenoh_default**: 100% up, 94% delivery, discovery 6.99 s, about 11 GB, p99 17586 us (~18 ms) at 200.
+- **zenoh_tuned**: 100% up, 93% delivery, discovery 7.71 s, about 11 GB, p99 19995 us (~20 ms) at 200.
 
 ### Read per RMW, shm run
 

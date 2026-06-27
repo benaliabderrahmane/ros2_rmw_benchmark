@@ -49,8 +49,8 @@ come up, against the default's 15% (and the default was already down to 60% up a
 200. Message delivery falls to 79%, p99 latency climbs to about 0.45 s (the raw
 figure is 453589 us), PSS hits 4.6 GB, and CPU sits around 3335%. So tuned Cyclone
 trades "most nodes never start" for "nodes start but a fifth of the traffic is
-lost and the tail is half a second." On the 64 KB run the shape is the same: 86%
-of nodes up at 200, 63% delivery, p99 about 0.52 s, 6.0 GB PSS.
+lost and the tail is half a second." On the 64 KB run the shape is the same: 98%
+of nodes up at 200, 82% delivery, p99 about 0.46 s, 6.8 GB PSS.
 
 ---
 
@@ -70,7 +70,7 @@ through shared memory instead of copying it through the kernel for every message
 **Effect.** Net negative for this workload. `iox-roudi` reserves a fixed pool the
 moment the first node starts: about 640 MB of PSS at one node, before any real
 traffic. Worse, bring-up collapses past about 50 nodes. All nodes are up at 50,
-then 10% at 100 and 11% at 200. The shared-memory path was meant to help at scale,
+then 11% at 100 and 8% at 200. The shared-memory path was meant to help at scale,
 and it is the one path that does not reach scale. For a many-process graph like
 this one, plain tuned Cyclone is the better Cyclone.
 
@@ -122,7 +122,7 @@ the run where that copy is largest.
 **Source.** Fast DDS data-sharing docs.
 
 **Effect.** No measurable change versus default at 64 KB. Both data-sharing and
-plain default collapse at 200 nodes: 34% of nodes up with data-sharing, 30% with
+plain default collapse at 200 nodes: 23.5% of nodes up with data-sharing, 31.5% with
 default. Data-sharing does not change anything here because the bottleneck is not
 the payload copy. It is discovery. Zero-copy makes the transfer cheaper once a
 participant is talking, but at 200 nodes most participants never get that far, so
@@ -145,8 +145,10 @@ daemon is why Zenoh shows a non-zero daemon PSS column even on the default run.
 
 **Effect.** Small. Zenoh is the one DDS-family stack that already brings up nearly
 all nodes on defaults (99% up, 96% delivery on the 256-byte run), so SHM was not a
-bring-up fix here. At 200 nodes on the 256-byte run, default Zenoh has a p99 of
-about 12 ms and SHM-on Zenoh about 32 ms, so SHM did not help the tail there.
+bring-up fix here. At 200 nodes on the 256-byte run, default Zenoh and SHM-on
+Zenoh have about the same p99 (around 4-5 ms in this run; Zenoh's tail is
+run-to-run variable, so read it as single-digit-to-tens of ms), so SHM did not
+help the tail there.
 Neither one helps the RAM: Zenoh sits around 8.4 GB PSS at 200 nodes either way,
 and around 11 GB on the 64 KB run. So Zenoh works at scale but stays expensive,
 and turning SHM on does not change that.

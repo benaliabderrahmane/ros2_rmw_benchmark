@@ -21,7 +21,7 @@ The harness is eight files under `scripts/`, plus the load node and the configs.
 - `plot.py` — renders the result JSONs as the multi-panel dashboard PNG. One panel per metric, x = node count (log), one line per variant, `unix_socket` drawn thick/black as the reference.
 - `run_benchmark.sh` — the orchestrator. Builds the Docker image, runs each phase (`string`, then `shm`) in a container, writes `system.md` and the graphs. `--native` runs a single matrix in-place (this is what runs inside the container).
 - `sysinfo.sh` — prints the host's CPU/RAM/kernel/shm as a markdown table; the orchestrator captures it to `results/system.md`.
-- `clean.sh` — removes generated results and raw scratch dirs.
+- `clean.sh` — removes the Docker image/containers and rebuildable build dirs; leaves the committed `results/` alone (those are git-tracked).
 
 The data flow, end to end: `load_node` writes per-node JSON → `run_one.py` pools those into one `result_*.json` (using `measure.py` for RAM/CPU) → `aggregate.py` tabulates → `plot.py` charts. `rmw_matrix.py` sits to the side and tells `run_one.py` how to launch each variant.
 
