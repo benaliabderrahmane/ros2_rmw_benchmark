@@ -2,9 +2,9 @@
 """The benchmark matrix: every (RMW, config) variant and how to run it.
 
 Each variant resolves to a RunSpec describing the environment the node
-processes need, an optional discovery daemon to start first (Zenoh router /
-Fast DDS Discovery Server), and which config files were applied (for the
-record). The local rmw_unix_socket_cpp has no tunables, so it has a single
+processes need, an optional daemon to start first (Zenoh router, or the
+Iceoryx iox-roudi daemon for Cyclone shared memory), and which config files
+were applied (for the record). The local rmw_unix_socket_cpp has no tunables, so it has a single
 "default" column; the three DDS/Zenoh stacks each get default + tuned.
 """
 

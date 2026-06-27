@@ -48,7 +48,8 @@ METRICS = [
 def load(indir):
     data = {}
     for f in glob.glob(os.path.join(indir, "result_*.json")):
-        d = json.load(open(f))
+        with open(f) as fh:
+            d = json.load(fh)
         data.setdefault(d["variant"], {})[d["nodes"]] = d
     return data
 

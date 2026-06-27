@@ -80,7 +80,7 @@ def main():
     ap.add_argument("--settle", type=float, default=6.0, help="wait before sampling RAM/CPU")
     ap.add_argument("--cpu-window", type=float, default=3.0)
     ap.add_argument("--fixed", action="store_true",
-                    help="send a fixed-size 64 KiB message instead of a string, so the "
+                    help="send a fixed-size 64 KB message instead of a string, so the "
                          "DDS zero-copy shared-memory paths can engage")
     ap.add_argument("--degree", type=int, default=1,
                     help="senders each node subscribes to (1 = ring, >1 = fan-out)")
@@ -109,7 +109,7 @@ def main():
     if spec.notes:
         print(f"  config: {spec.notes}")
 
-    # 1. Discovery daemon (Zenoh router / Fast DDS Discovery Server). Launch it
+    # 1. Optional daemon (Zenoh router, or Iceoryx iox-roudi for Cyclone SHM). Launch it
     #    in its own session so we can measure + kill the real server child, not
     #    just the wrapper/launcher that spawned it.
     daemon = None
@@ -182,11 +182,11 @@ def main():
     discovery_s = round((max(first_recv) - t0) / 1e9, 2) if first_recv else None
     n = args.nodes
 
-    # If discovery outran the settle window, the RAM/CPU sample may have caught
-    # discovery transients rather than steady state -- flag it rather than hide it.
+    # If discovery took longer than the settle wait, the RAM/CPU sample may have
+    # caught discovery still in progress rather than steady state.
     sampling_suspect = discovery_s is not None and discovery_s > args.settle
     if sampling_suspect:
-        print(f"  NOTE: discovery ({discovery_s}s) > settle ({args.settle}s); "
+        print(f"  discovery ({discovery_s}s) > settle ({args.settle}s); "
               f"RAM/CPU sample may include discovery transient", file=sys.stderr)
     # Expected receives per node = sent * eff_degree, since each node subscribes
     # to eff_degree senders. load_node applies this SAME clamp, so keep the two in
@@ -211,7 +211,9 @@ def main():
         "ram_pss_per_node_mb": round(mem_nodes["pss_mb"] / n, 2) if n else 0.0,
         "cpu_total_pct": cpu_total,
         "cpu_daemon_pct": cpu_daemon,
-        "cpu_per_node_pct": round((cpu_total - cpu_daemon) / n, 2) if n else 0.0,
+        # max(0,...): cpu_total and cpu_daemon come from separate sampling windows,
+        # so the subtraction can go slightly negative; clamp it.
+        "cpu_per_node_pct": round(max(0.0, cpu_total - cpu_daemon) / n, 2) if n else 0.0,
         "lat_p50_us": percentile(pooled_lat, 0.50),
         "lat_p99_us": percentile(pooled_lat, 0.99),
         "lat_mean_us": round(sum(pooled_lat) / len(pooled_lat), 1) if pooled_lat else None,

@@ -48,10 +48,10 @@ def cpu_ticks(pid):
 def pgid_members(pgid):
     """All live pids in process group `pgid`.
 
-    Discovery daemons are launched via wrappers (`fastdds discovery` is a python
-    script; `ros2 run` is a launcher) that fork the real server as a child, so
-    measuring/killing the launcher pid alone misses (or orphans) the server.
-    Running the daemon in its own session lets us address the whole group.
+    Daemons are launched through wrappers (e.g. `ros2 run rmw_zenoh_cpp rmw_zenohd`
+    is a launcher) that fork the real server as a child, so measuring or killing
+    the launcher pid alone misses (or orphans) the server. Running the daemon in
+    its own session lets us address the whole group.
     """
     members = []
     for entry in os.listdir("/proc"):

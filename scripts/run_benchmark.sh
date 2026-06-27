@@ -111,10 +111,13 @@ run_docker() {
   mkdir -p "$REPO/results"
   bash "$SCRIPT_DIR/sysinfo.sh" > "$REPO/results/system.md" 2>/dev/null || true
 
+  # Guard each phase so one failing phase doesn't abort the script under set -e:
+  # the other phase still runs, and the chown-back below always happens (otherwise
+  # a crash here would leave root-owned result files the host user can't delete).
   for phase in $PHASES; do
     case "$phase" in
-      string) run_phase "$ROS_DISTRO" 0 "${VARIANTS:-$STRING_VARIANTS}" ;;
-      shm)    run_phase "${ROS_DISTRO}_shm" 1 "${VARIANTS:-$SHM_VARIANTS}" ;;
+      string) run_phase "$ROS_DISTRO" 0 "${VARIANTS:-$STRING_VARIANTS}" || echo "  !! string phase failed (continuing)" >&2 ;;
+      shm)    run_phase "${ROS_DISTRO}_shm" 1 "${VARIANTS:-$SHM_VARIANTS}" || echo "  !! shm phase failed (continuing)" >&2 ;;
       *) echo "  ?? unknown phase '$phase' (use: string shm)" >&2 ;;
     esac
   done

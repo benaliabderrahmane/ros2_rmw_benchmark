@@ -270,7 +270,7 @@ Zero-copy really pays off for megabyte-scale messages such as camera and lidar f
 - `rmw_unix_socket_cpp` is alpha and has a single maintainer.
 - It is localhost only by design. Cross-host traffic goes through a separate bridge, which is not part of this benchmark and not measured here. Nothing in this document says anything about multi-host.
 - It passes the rmw conformance suite plus about 90 of its own tests. It is not safety certified.
-- It has a per-message size limit of about 200 KB (the AF_UNIX datagram limit). For larger messages, raise `net.core.wmem_max` and `net.core.rmem_max`. This is why the shm run tops out at 64 KB.
+- It has a per-message size limit of about 400 KB — two times `net.core.wmem_max` (the AF_UNIX datagram limit). For larger messages, raise `net.core.wmem_max` and `net.core.rmem_max`. This is why the shm run tops out at 64 KB.
 - It does not try to beat shared-memory DDS at 1:1 latency, and at small node counts it does not (Cyclone and Zenoh post a lower p50 at 1 node).
 - The benchmark is synthetic ring traffic at one rate and one size on one host. Real graphs have uneven fan-out, mixed message sizes, and bursty traffic. Treat this as a scaling comparison on one host with this workload, not a final verdict on any of these stacks.
 

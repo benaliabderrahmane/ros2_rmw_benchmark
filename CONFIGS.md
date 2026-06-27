@@ -46,8 +46,8 @@ overhead when you have 200 participants on one box.
 **Effect.** It works as a bring-up fix. On the 256-byte run, 99% of the 200 nodes
 come up, against the default's 15% (and the default was already down to 60% up at
 50 nodes and 28% at 100). That is the win. But it does not make Cyclone healthy at
-200. Message delivery falls to 82%, p99 latency climbs to about 0.45 s (the raw
-figure is 453241 us), PSS hits 4.7 GB, and CPU sits around 3325%. So tuned Cyclone
+200. Message delivery falls to 79%, p99 latency climbs to about 0.45 s (the raw
+figure is 453589 us), PSS hits 4.6 GB, and CPU sits around 3335%. So tuned Cyclone
 trades "most nodes never start" for "nodes start but a fifth of the traffic is
 lost and the tail is half a second." On the 64 KB run the shape is the same: 86%
 of nodes up at 200, 63% delivery, p99 about 0.52 s, 6.0 GB PSS.
@@ -130,7 +130,7 @@ there is no transfer left to make cheaper.
 
 ---
 
-## zenoh SHM — `zenoh_tuned` via `ZENOH_CONFIG_OVERRIDE`
+## zenoh_tuned (SHM) — via `ZENOH_CONFIG_OVERRIDE`
 
 **What it changes.** Sets `transport/shared_memory/enabled=true` on the
 `rmw_zenohd` router and on every session, through `ZENOH_CONFIG_OVERRIDE` rather
@@ -162,6 +162,6 @@ zero-copy does not solve the at-scale problem on this workload. Cyclone with
 Iceoryx collapses past about 50 nodes and adds a fixed 640 MB pool. Fast DDS
 data-sharing changes nothing, because discovery is the bottleneck. Zenoh SHM only
 trims the tail. Zero-copy really pays off for megabyte-scale messages (camera,
-lidar), which are past the 200 KB AF_UNIX datagram cap and out of scope here. See
+lidar), which are past the ~400 KB AF_UNIX datagram cap (two times `net.core.wmem_max`) and out of scope here. See
 `RESULTS.md` for the full per-node-count tables and `results/system.md` for the
 exact host the numbers came from.

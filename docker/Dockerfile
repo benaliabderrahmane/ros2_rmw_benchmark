@@ -28,8 +28,8 @@ ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Pinned refs. Branch/tag are the active pins; known-good SHAs are noted for
-# byte-exact rebuilds (uncomment the checkout lines to use them).
+# Versions to build. These track branches/tags (so they pick up upstream fixes).
+# For a byte-exact rebuild, set any *_REF below to a specific commit SHA.
 #   CycloneDDS core  tag 0.10.5
 #   rmw_cyclonedds   branch jazzy
 #   rmw_zenoh        branch jazzy   (zenoh_cpp_vendor 0.2.9; Rust pinned to 1.75)

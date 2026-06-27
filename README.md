@@ -47,7 +47,9 @@ One command. It builds the Docker image, runs both matrices, and writes the grap
 bash scripts/run_benchmark.sh
 ```
 
-Prereqs: Docker, internet (the build clones CycloneDDS, Zenoh, and `rmw_unix_socket_cpp` and compiles zenoh-c with cargo), and this repo.
+Prereqs: a **Linux host** (the harness reads `/proc` and uses `--ipc=host` + the host's `/dev/shm`; Docker Desktop on macOS/Windows is not supported), Docker, internet (the build clones CycloneDDS, Zenoh, and `rmw_unix_socket_cpp` and compiles zenoh-c with cargo), and this repo.
+
+Heads-up on the first run: the image build compiles CycloneDDS and Zenoh from source (~30–60 min the first time, cached after), and needs several GB of disk for the image and build cache. The full matrix then takes a while on top of that. Start with the quick run below to smoke-test before committing to the whole thing.
 
 Quick run, just two node counts and the string phase:
 
@@ -56,6 +58,8 @@ NODES="1 10" PHASES=string bash scripts/run_benchmark.sh
 ```
 
 ## Results
+
+The charts, tables, and raw JSONs below are checked into the repo (`results/`), so you can read the whole comparison without running anything — run it yourself only to reproduce the numbers or add your own hardware.
 
 The two charts below are the quickest way to read the whole sweep. Each one has
 four panels — nodes up, total RAM, CPU, and tail latency — plotted against node

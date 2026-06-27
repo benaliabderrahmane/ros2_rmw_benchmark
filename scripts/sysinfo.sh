@@ -5,7 +5,9 @@
 #   bash scripts/sysinfo.sh > results/system.md
 set -e
 
-os="$(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME")"
+# `|| os=""` so a missing /etc/os-release doesn't trip set -e and blank the file;
+# the ${os:-unknown} fallback below then fills it in.
+os="$(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME")" || os=""
 cpu="$(LC_ALL=C lscpu 2>/dev/null | sed -n 's/^Model name:[[:space:]]*//p' | head -1)"
 
 cat <<EOF
