@@ -26,6 +26,7 @@ DURATION="${DURATION:-30}"
 WARMUP="${WARMUP:-5}"
 SETTLE="${SETTLE:-10}"
 CPU_WINDOW="${CPU_WINDOW:-3}"
+DEGREE="${DEGREE:-1}"   # senders each node subscribes to (1 = ring, >1 = fan-out)
 
 # Which phases the one-command run does, and the variant set for each. The SHM
 # phase swaps in the shared-memory variants and a fixed-size message.
@@ -54,6 +55,7 @@ run_native() {
         --variant "$v" --nodes "$n" \
         --rate "$RATE" --size "$SIZE" --duration "$DURATION" \
         --warmup "$WARMUP" --settle "$SETTLE" --cpu-window "$CPU_WINDOW" \
+        --degree "$DEGREE" \
         $fixed_flag --outdir "$outdir" || echo "  !! $v n=$n failed (continuing)"
     done
   done
@@ -87,7 +89,7 @@ run_phase() {
   echo "=== phase: $1 ==="
   docker run --rm \
     --ipc=host --shm-size=2g --ulimit nofile=1048576:1048576 \
-    -e NODES -e RATE -e SIZE -e DURATION -e WARMUP -e SETTLE -e CPU_WINDOW \
+    -e NODES -e RATE -e SIZE -e DURATION -e WARMUP -e SETTLE -e CPU_WINDOW -e DEGREE \
     -e "VARIANTS=$3" -e "FIXED=$2" -e "OUTDIR=/benchmarks/results/$1" \
     -v "$REPO/results:/benchmarks/results" \
     "$IMAGE" bash /benchmarks/scripts/run_benchmark.sh --native

@@ -51,6 +51,7 @@ struct Args
   double duration = 15.0;
   double warmup = 3.0;
   bool fixed = false;
+  int degree = 1;   // how many senders each node subscribes to (1 = ring, >1 = fan-out)
   std::string out;
 };
 
@@ -81,9 +82,13 @@ Args parse_args(int argc, char ** argv)
   if (const char * v = arg_value(argc, argv, "--size")) {a.size = std::atoi(v);}
   if (const char * v = arg_value(argc, argv, "--duration")) {a.duration = std::atof(v);}
   if (const char * v = arg_value(argc, argv, "--warmup")) {a.warmup = std::atof(v);}
+  if (const char * v = arg_value(argc, argv, "--degree")) {a.degree = std::atoi(v);}
   if (const char * v = arg_value(argc, argv, "--out")) {a.out = v;}
   a.fixed = arg_flag(argc, argv, "--fixed");
   if (a.total < 1) {a.total = 1;}
+  if (a.degree < 1) {a.degree = 1;}
+  if (a.degree > a.total - 1) {a.degree = a.total - 1;}  // can't subscribe to more peers than exist
+  if (a.degree < 1) {a.degree = 1;}
   if (a.size < HEADER_BYTES) {a.size = HEADER_BYTES;}
   return a;
 }
@@ -93,7 +98,7 @@ Args parse_args(int argc, char ** argv)
 // from a received message. The executor blocks (spin), so idle CPU reflects the
 // RMW's real wait behaviour, not a poll loop.
 template<typename MsgT, typename Stamp, typename Read>
-void run(const rclcpp::Node::SharedPtr & node, const Args & args, int sender,
+void run(const rclcpp::Node::SharedPtr & node, const Args & args,
   Stamp stamp, Read read_ts)
 {
   rclcpp::QoS qos(rclcpp::KeepLast(10));
@@ -121,8 +126,15 @@ void run(const rclcpp::Node::SharedPtr & node, const Args & args, int sender,
         latencies_us.push_back(static_cast<double>(recv_ns - send_ns) / 1000.0);
       }
     };
-  auto sub = node->create_subscription<MsgT>(
-    "/bench/t" + std::to_string(sender), qos, on_msg);
+  // Subscribe to `degree` senders: the ring (degree 1) subscribes to one
+  // upstream neighbour; fan-out (degree > 1) subscribes to several, which makes
+  // each publisher fan out to `degree` subscribers.
+  std::vector<typename rclcpp::Subscription<MsgT>::SharedPtr> subs;
+  for (int j = 1; j <= args.degree; ++j) {
+    int s = (args.id - j + args.total) % args.total;
+    subs.push_back(node->create_subscription<MsgT>(
+        "/bench/t" + std::to_string(s), qos, on_msg));
+  }
 
   const int64_t t_ready_ns = mono_ns();
 
@@ -151,7 +163,7 @@ void run(const rclcpp::Node::SharedPtr & node, const Args & args, int sender,
     std::ofstream f(args.out);
     f << "{\n";
     f << "  \"idx\": " << args.id << ",\n";
-    f << "  \"expected_sender\": " << sender << ",\n";
+    f << "  \"degree\": " << args.degree << ",\n";
     f << "  \"t_ready_ns\": " << t_ready_ns << ",\n";
     f << "  \"t_first_recv_ns\": " << t_first_recv_ns << ",\n";
     f << "  \"n_sent\": " << n_sent << ",\n";
@@ -173,20 +185,19 @@ int main(int argc, char ** argv)
   Args args = parse_args(argc, argv);
   rclcpp::init(argc, argv);
 
-  const int sender = (args.id - 1 + args.total) % args.total;
   auto node = rclcpp::Node::make_shared("bench_node_" + std::to_string(args.id));
 
   if (args.fixed) {
     using Msg = bench_nodes::msg::FixedMsg;
     run<Msg>(
-      node, args, sender,
+      node, args,
       [](Msg & m, int64_t ts, int64_t s) {m.send_ns = ts; m.seq = s;},
       [](const Msg & m) {return m.send_ns;});
   } else {
     using Msg = std_msgs::msg::String;
     std::string payload(static_cast<size_t>(args.size), 'x');
     run<Msg>(
-      node, args, sender,
+      node, args,
       [&payload](Msg & m, int64_t ts, int64_t s) {
         m.data = payload;
         char hdr[HEADER_BYTES + 1];

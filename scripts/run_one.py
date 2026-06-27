@@ -78,6 +78,8 @@ def main():
     ap.add_argument("--cpu-window", type=float, default=3.0)
     ap.add_argument("--fixed", action="store_true",
                     help="use the fixed-size FixedMsg (64 KiB) so DDS zero-copy SHM engages")
+    ap.add_argument("--degree", type=int, default=1,
+                    help="senders each node subscribes to (1 = ring, >1 = fan-out)")
     ap.add_argument("--outdir", required=True)
     args = ap.parse_args()
 
@@ -127,7 +129,7 @@ def main():
         cmd = [load_node, "--id", str(i), "--total", str(args.nodes),
                "--rate", str(args.rate), "--size", str(args.size),
                "--duration", str(args.duration), "--warmup", str(args.warmup),
-               "--out", str(out)]
+               "--degree", str(args.degree), "--out", str(out)]
         if args.fixed:
             cmd.append("--fixed")
         p = subprocess.Popen(cmd, env=node_env,
@@ -182,10 +184,13 @@ def main():
     if sampling_suspect:
         print(f"  NOTE: discovery ({discovery_s}s) > settle ({args.settle}s); "
               f"RAM/CPU sample may include discovery transient", file=sys.stderr)
+    # Each node subscribes to eff_degree senders (load_node clamps the same way),
+    # so the messages it should receive are sent * eff_degree.
+    eff_degree = max(1, min(args.degree, n - 1))
     result = {
         "variant": spec.key, "rmw": spec.rmw, "config": spec.config,
         "msg": "fixed64k" if args.fixed else "string",
-        "nodes": n, "rate_hz": args.rate,
+        "nodes": n, "rate_hz": args.rate, "degree": eff_degree,
         "size_bytes": 65536 if args.fixed else args.size,
         "duration_s": args.duration, "warmup_s": args.warmup,
         "launch_elapsed_s": round(launch_elapsed, 2),
@@ -193,7 +198,7 @@ def main():
         "sampling_during_discovery": sampling_suspect,
         "nodes_received": nodes_received,
         "delivery_ratio_nodes": round(nodes_received / n, 3) if n else 0.0,
-        "delivery_ratio_msgs": round(total_recv / total_sent, 3) if total_sent else 0.0,
+        "delivery_ratio_msgs": round(total_recv / (total_sent * eff_degree), 3) if total_sent else 0.0,
         "ram_node_pss_mb": mem_nodes["pss_mb"],
         "ram_node_rss_mb": mem_nodes["rss_mb"],
         "ram_daemon_pss_mb": mem_daemon["pss_mb"],
