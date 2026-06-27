@@ -83,6 +83,8 @@ def sample_cpu(pids, interval_s):
     time.sleep(interval_s)
     delta = 0
     for p in pids:
-        delta += cpu_ticks(p) - before.get(p, 0)
+        # A pid that exits during the window reads 0 ticks on the second sample;
+        # clamp per-pid so a dead process contributes 0 instead of subtracting.
+        delta += max(0, cpu_ticks(p) - before.get(p, 0))
     cpu_seconds = delta / CLK_TCK
     return round(100.0 * cpu_seconds / interval_s, 1)

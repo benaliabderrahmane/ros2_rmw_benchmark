@@ -43,9 +43,9 @@ overhead when you have 200 participants on one box.
 
 **Source.** CycloneDDS configuration docs, https://cdds.io/config.
 
-**Effect.** It works as a bring-up fix. On the 256-byte run, 99% of the 200 nodes
+**Effect.** It works as a bring-up fix. On the 256-byte run, 97% of the 200 nodes
 come up, against the default's 15% (and the default was already down to 60% up at
-50 nodes and 28% at 100). That is the win. But it does not make Cyclone healthy at
+50 nodes and 27% at 100). That is the win. But it does not make Cyclone healthy at
 200. Message delivery falls to 79%, p99 latency climbs to about 0.45 s (the raw
 figure is 453589 us), PSS hits 4.6 GB, and CPU sits around 3335%. So tuned Cyclone
 trades "most nodes never start" for "nodes start but a fifth of the traffic is
@@ -144,7 +144,7 @@ multicast scouting, so without the router there is no discovery at all. That
 daemon is why Zenoh shows a non-zero daemon PSS column even on the default run.
 
 **Effect.** Small. Zenoh is the one DDS-family stack that already brings up nearly
-all nodes on defaults (97% up, 94% delivery on the 256-byte run), so SHM was not a
+all nodes on defaults (99% up, 96% delivery on the 256-byte run), so SHM was not a
 bring-up fix here. At 200 nodes on the 256-byte run, default Zenoh has a p99 of
 about 12 ms and SHM-on Zenoh about 32 ms, so SHM did not help the tail there.
 Neither one helps the RAM: Zenoh sits around 8.4 GB PSS at 200 nodes either way,
@@ -155,7 +155,7 @@ and turning SHM on does not change that.
 
 ## What to take from this
 
-Tuning fixes the bring-up problem for Cyclone (15% to 99% up at 256 bytes, 86% up
+Tuning fixes the bring-up problem for Cyclone (15% to 97% up at 256 bytes, 98% up
 at 64 KB) and is a wash or a regression everywhere else. The shared-memory
 variants are here for fairness on the large-payload run, and the result is that
 zero-copy does not solve the at-scale problem on this workload. Cyclone with

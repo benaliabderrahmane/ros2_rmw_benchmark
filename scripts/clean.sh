@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Remove benchmark artifacts. SCOPED to this suite — it never touches other
-# Docker images, containers, or anything you didn't create here. Safe anytime.
+# Remove the Docker image/containers and native build dirs this suite creates.
+# Scoped to this suite: it never touches unrelated Docker images or containers.
+# It does NOT delete the committed reference results under results/ — those are
+# git-tracked, so manage them with git (e.g. `git checkout -- results/`).
 #
-#   bash scripts/clean.sh         # image + stray containers + results
+#   bash scripts/clean.sh         # image + stray containers + native build dirs
 #   bash scripts/clean.sh --all   # also: build cache, base image, /dev/shm
 #
 # Don't use `docker system prune -a` for this; it would delete unrelated images too.
@@ -16,8 +18,8 @@ docker ps -aq --filter ancestor="$IMAGE" | xargs -r docker rm -f
 echo "== image $IMAGE =="
 docker rmi "$IMAGE" 2>/dev/null || echo "  (not present)"
 
-echo "== generated results + native build dirs =="
-rm -rf "$BENCH_DIR"/results/*/ "$BENCH_DIR"/build "$BENCH_DIR"/install "$BENCH_DIR"/log 2>/dev/null || true
+echo "== native build dirs (results/ is git-tracked and left alone) =="
+rm -rf "$BENCH_DIR"/build "$BENCH_DIR"/install "$BENCH_DIR"/log 2>/dev/null || true
 
 if [ "${1:-}" = "--all" ]; then
   echo "== unused Docker build cache (shared across builds) =="
