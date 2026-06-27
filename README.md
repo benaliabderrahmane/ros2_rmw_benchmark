@@ -95,7 +95,7 @@ Only `unix_socket` stays healthy at 200 nodes: all 200 up, 99.8% delivery, p50 1
 
 The DDS stacks each fail in their own way. Cyclone at default brings up 14.5% of nodes (60% at 50, 27% at 100). Tuned gets 97% up, but delivery drops to 79%, p99 climbs to about 0.45 s, and it costs 4.6 GB and 3335% CPU. Fast DDS, both default and tuned, brings up ~27% at 200 with a p99 of one to two seconds; tuned (simple discovery + mutation_tries=1000) is clean to 100 nodes, then the discovery storm caps it. Zenoh comes closest on bring-up — 99% at default, 98% tuned — at 92 to 96% delivery, but p99 in the single-digit milliseconds and RAM about 8.5 GB.
 
-At 1 and 10 nodes the picture flips in places. Cyclone and Fast DDS post lower p50 latency than `unix_socket`, and Cyclone uses less RAM. That is the honest small-N result. The difference is that `unix_socket`'s curves stay flat while the others bend.
+At 1 node the DDS stacks post a lower p50 latency than `unix_socket` (Cyclone 69 µs, Fast DDS 113 µs, Zenoh 91 µs, against our 128 µs). That is the honest small-N result, and it is narrow: by 10 nodes `unix_socket` is already ahead of every DDS stack on p50, and it uses no more RAM than Cyclone at any node count. The difference is that `unix_socket`'s curves stay flat while the others bend.
 
 ### The SHM caveat, plainly
 

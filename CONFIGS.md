@@ -96,8 +96,8 @@ once (unresponsive, >100% CPU), and brought up 0 of 200 nodes — worse than pla
 simple discovery, which at least got ~32% up. We also tested raising
 `domainIDGain` (250→2000) to move the port-collision ceiling past 200; it did not
 help either. The real bottleneck at 200 participants on one host is the O(N²)
-simple-discovery traffic storm: discovery takes ~150 s and only about a third of
-nodes come up even with a three-minute window. So no tuning makes Fast DDS scale
+simple-discovery traffic storm: discovery takes ~90 s and only about a quarter of
+nodes come up within the run. So no tuning makes Fast DDS scale
 to 200 simultaneous participants on one host here — it is a real limitation, and
 `mutation_tries=1000` on simple discovery is the least-bad honest choice (and the
 maintainers' recommended one).
