@@ -1,13 +1,13 @@
 # Test system
 
-The numbers under `results/` were measured on a single host. Fill this in by
-running, on that machine:
-
-```bash
-bash scripts/sysinfo.sh > results/system.md
-```
-
-It records CPU model, logical cores, RAM, kernel, OS, `/dev/shm` size, and
-`net.core.{wmem,rmem}_max` — the context a reader needs to weigh the numbers.
-
-<!-- placeholder until run on the benchmark host -->
+| field | value |
+|---|---|
+| date | 2026-06-26 23:47 UTC |
+| cpu | Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz |
+| logical cpus | 32 |
+| ram | 45Gi |
+| kernel | Linux 6.8.0-124-generic |
+| os | Ubuntu 24.04.4 LTS |
+| /dev/shm | 23G |
+| net.core.wmem_max | 212992 |
+| net.core.rmem_max | 212992 |

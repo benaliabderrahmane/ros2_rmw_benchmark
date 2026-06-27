@@ -7,93 +7,93 @@ Node counts: 1, 10, 50, 100, 200
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
 | unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
-| cyclonedds_default | 1.0 | 1.0 | 0.6 | 0.3 | 0.14 |
-| cyclonedds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.975 |
-| fastdds_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.27 |
-| fastdds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 |
-| zenoh_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.98 |
-| zenoh_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| cyclonedds_default | 1.0 | 1.0 | 0.6 | 0.27 | 0.145 |
+| cyclonedds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.97 |
+| fastdds_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.265 |
+| fastdds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.27 |
+| zenoh_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.99 |
+| zenoh_tuned | 1.0 | 1.0 | 1.0 | 0.98 | 0.98 |
 
 ## Msg delivery (survivors)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
 | unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 0.998 |
-| cyclonedds_default | 1.0 | 1.0 | 0.937 | 0.937 | 0.874 |
-| cyclonedds_tuned | 1.0 | 1.0 | 0.998 | 0.988 | 0.799 |
-| fastdds_default | 1.0 | 1.0 | 0.978 | 0.971 | 0.123 |
-| fastdds_tuned | 1.0 | 0.965 | 0.851 | 0.297 | 0.0 |
-| zenoh_default | 1.0 | 1.0 | 0.999 | 0.992 | 0.937 |
-| zenoh_tuned | 1.0 | 1.0 | 0.998 | 0.99 | 0.952 |
+| cyclonedds_default | 1.0 | 1.0 | 0.937 | 0.843 | 0.906 |
+| cyclonedds_tuned | 1.0 | 1.0 | 0.998 | 0.987 | 0.794 |
+| fastdds_default | 1.0 | 0.999 | 0.98 | 0.971 | 0.108 |
+| fastdds_tuned | 1.0 | 1.0 | 0.983 | 0.962 | 0.141 |
+| zenoh_default | 1.0 | 1.0 | 0.998 | 0.992 | 0.957 |
+| zenoh_tuned | 1.0 | 1.0 | 0.999 | 0.969 | 0.919 |
 
 ## Discovery (s)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 0.1 | 0.08 | 0.14 | 0.23 | 0.55 |
-| cyclonedds_default | 0.07 | 0.08 | 0.27 | 0.26 | 0.27 |
-| cyclonedds_tuned | 0.07 | 0.08 | 0.31 | 1.53 | 27.18 |
-| fastdds_default | 0.09 | 0.22 | 1.74 | 3.29 | 76.46 |
-| fastdds_tuned | 0.09 | 1.19 | 5.09 | 22.85 | — |
-| zenoh_default | 0.08 | 0.09 | 0.32 | 1.06 | 6.06 |
-| zenoh_tuned | 0.08 | 0.09 | 0.38 | 1.14 | 6.17 |
+| unix_socket | 0.09 | 0.07 | 0.13 | 0.24 | 0.59 |
+| cyclonedds_default | 0.08 | 0.08 | 0.24 | 0.26 | 0.27 |
+| cyclonedds_tuned | 0.07 | 0.08 | 0.33 | 1.59 | 24.47 |
+| fastdds_default | 0.09 | 0.39 | 1.62 | 3.61 | 88.58 |
+| fastdds_tuned | 0.08 | 0.22 | 1.48 | 3.62 | 91.41 |
+| zenoh_default | 0.08 | 0.09 | 0.33 | 1.13 | 6.03 |
+| zenoh_tuned | 0.08 | 0.09 | 0.34 | 10.66 | 11.1 |
 
 ## RAM PSS (MB)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 46.9 | 65.5 | 141.7 | 238.6 | 438.2 |
-| cyclonedds_default | 14.4 | 51.3 | 202.5 | 202.5 | 202.0 |
-| cyclonedds_tuned | 14.4 | 51.1 | 372.8 | 1113.2 | 4509.7 |
-| fastdds_default | 25.5 | 108.6 | 741.1 | 2135.5 | 3605.4 |
-| fastdds_tuned | 39.6 | 120.7 | 736.1 | 876.2 | 1506.0 |
-| zenoh_default | 43.1 | 91.4 | 696.0 | 2300.0 | 8400.8 |
-| zenoh_tuned | 42.5 | 91.6 | 706.8 | 2310.8 | 8482.5 |
+| unix_socket | 13.1 | 31.6 | 107.9 | 204.7 | 405.3 |
+| cyclonedds_default | 14.2 | 51.1 | 202.2 | 201.7 | 202.1 |
+| cyclonedds_tuned | 14.1 | 50.7 | 371.4 | 1111.3 | 4617.0 |
+| fastdds_default | 24.8 | 108.1 | 740.2 | 2132.0 | 3418.5 |
+| fastdds_tuned | 24.4 | 108.2 | 740.9 | 2137.8 | 3405.2 |
+| zenoh_default | 42.1 | 90.8 | 692.5 | 2331.9 | 8553.9 |
+| zenoh_tuned | 42.4 | 90.8 | 692.1 | 2289.2 | 8673.1 |
 
 ## RAM RSS (MB)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 48.2 | 481.7 | 2410.3 | 4818.9 | 9647.8 |
-| cyclonedds_default | 15.7 | 166.3 | 600.7 | 600.6 | 599.6 |
-| cyclonedds_tuned | 15.7 | 166.7 | 1001.7 | 2386.1 | 7224.9 |
-| fastdds_default | 26.9 | 298.7 | 2107.5 | 5700.4 | 10494.7 |
-| fastdds_tuned | 27.1 | 298.0 | 2074.0 | 2786.2 | 5410.3 |
-| zenoh_default | 22.0 | 241.0 | 1610.3 | 4173.4 | 12179.3 |
-| zenoh_tuned | 21.9 | 241.5 | 1624.2 | 4189.3 | 12275.6 |
+| unix_socket | 14.4 | 143.6 | 718.5 | 1439.5 | 2888.8 |
+| cyclonedds_default | 15.5 | 164.0 | 593.8 | 592.8 | 593.7 |
+| cyclonedds_tuned | 15.4 | 164.4 | 989.7 | 2361.4 | 7308.9 |
+| fastdds_default | 26.2 | 293.2 | 2047.9 | 5533.3 | 9752.2 |
+| fastdds_tuned | 25.7 | 295.1 | 2081.1 | 5663.1 | 9901.8 |
+| zenoh_default | 21.5 | 236.6 | 1584.7 | 4159.4 | 12241.8 |
+| zenoh_tuned | 22.0 | 238.3 | 1591.6 | 4125.5 | 12381.2 |
 
 ## CPU (%)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 1.7 | 16.0 | 80.3 | 157.3 | 318.3 |
-| cyclonedds_default | 0.7 | 10.0 | 26.0 | 29.0 | 26.0 |
-| cyclonedds_tuned | 0.7 | 10.0 | 48.0 | 95.7 | 3324.7 |
-| fastdds_default | 1.0 | 13.7 | 79.7 | 196.0 | 3096.7 |
-| fastdds_tuned | 1.0 | 12.0 | 67.3 | 163.3 | 254.7 |
-| zenoh_default | 0.7 | 14.3 | 66.3 | 131.7 | 237.3 |
-| zenoh_tuned | 1.0 | 14.0 | 67.0 | 130.0 | 247.7 |
+| unix_socket | 1.3 | 15.0 | 81.0 | 161.3 | 318.0 |
+| cyclonedds_default | 0.7 | 10.0 | 26.3 | 26.0 | 26.3 |
+| cyclonedds_tuned | 1.3 | 9.3 | 50.7 | 95.0 | 3335.0 |
+| fastdds_default | 0.7 | 13.7 | 78.3 | 193.0 | 3140.7 |
+| fastdds_tuned | 1.0 | 13.0 | 78.0 | 194.7 | 3140.3 |
+| zenoh_default | 0.3 | 13.3 | 68.7 | 127.7 | 242.0 |
+| zenoh_tuned | 0.7 | 14.7 | 69.7 | 163.7 | 239.0 |
 
 ## Latency p50 (us)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 126.8 | 189.8 | 169.0 | 135.2 | 123.1 |
-| cyclonedds_default | 68.4 | 216.0 | 211.4 | 214.8 | 203.4 |
-| cyclonedds_tuned | 76.9 | 240.5 | 242.3 | 216.3 | 3724.9 |
-| fastdds_default | 113.9 | 310.4 | 291.9 | 288.3 | 32634.5 |
-| fastdds_tuned | 113.7 | 321.8 | 287.6 | 279.3 | — |
-| zenoh_default | 91.1 | 483.1 | 424.4 | 360.4 | 296.0 |
-| zenoh_tuned | 90.3 | 477.3 | 421.4 | 351.7 | 295.7 |
+| unix_socket | 128.2 | 173.7 | 185.5 | 136.3 | 122.6 |
+| cyclonedds_default | 68.6 | 230.3 | 206.8 | 207.9 | 208.4 |
+| cyclonedds_tuned | 89.0 | 239.9 | 243.6 | 220.5 | 3822.6 |
+| fastdds_default | 113.1 | 275.8 | 292.1 | 288.2 | 350.3 |
+| fastdds_tuned | 116.0 | 320.7 | 291.1 | 282.6 | 356.9 |
+| zenoh_default | 90.7 | 488.4 | 429.0 | 364.4 | 295.3 |
+| zenoh_tuned | 90.9 | 457.1 | 424.2 | 353.9 | 294.7 |
 
 ## Latency p99 (us)
 
 | Variant | 1 nodes | 10 nodes | 50 nodes | 100 nodes | 200 nodes |
 |---|---|---|---|---|---|
-| unix_socket | 164.8 | 255.0 | 237.3 | 238.9 | 242.2 |
-| cyclonedds_default | 69.9 | 325.3 | 318.7 | 323.7 | 318.3 |
-| cyclonedds_tuned | 112.8 | 401.3 | 338.0 | 345.7 | 452673.7 |
-| fastdds_default | 179.1 | 367.5 | 397.8 | 466.6 | 1229407.6 |
-| fastdds_tuned | 115.8 | 421.5 | 404.3 | 161728.0 | — |
-| zenoh_default | 110.2 | 571.1 | 580.9 | 563.9 | 4081.6 |
-| zenoh_tuned | 107.8 | 579.8 | 571.5 | 569.4 | 8197.9 |
+| unix_socket | 149.8 | 258.3 | 236.2 | 236.1 | 229.9 |
+| cyclonedds_default | 69.7 | 317.1 | 320.5 | 317.8 | 323.3 |
+| cyclonedds_tuned | 98.3 | 373.3 | 342.6 | 344.2 | 453588.9 |
+| fastdds_default | 115.0 | 382.9 | 397.1 | 435.0 | 1880345.2 |
+| fastdds_tuned | 128.6 | 426.6 | 388.3 | 450.3 | 868880.3 |
+| zenoh_default | 107.8 | 618.2 | 579.6 | 551.2 | 4983.8 |
+| zenoh_tuned | 107.9 | 570.2 | 583.7 | 574.6 | 4058.1 |

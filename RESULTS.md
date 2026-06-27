@@ -1,251 +1,279 @@
 # Results
 
-The full writeup behind the README. If you want the headline, the README has it. This file is the methodology, every table, and a per-RMW reading of what happened.
+This is the full writeup behind the README. If you only want the headline, the README has it. This file has the method, every table, and a short plain read of what each RMW did.
 
-All of it is a single SERVER run on one host, ROS 2 Jazzy. The 256-byte run lives in `results/jazzy/`, the 64 KB run in `results/jazzy_shm/`. The two graphs below come out of those directories via `scripts/plot.py`.
+Everything here is one run on one host, ROS 2 Jazzy, localhost only. The 256-byte run is in `results/jazzy/`. The 64 KB run is in `results/jazzy_shm/`. The two graphs below come from those directories.
 
 ![256-byte ring, 1 to 200 nodes](results/graphs/jazzy.png)
 
 ![64 KB FixedMsg ring, 1 to 200 nodes](results/graphs/jazzy_shm.png)
 
-Headline: at 200 nodes on one host, `rmw_unix_socket_cpp` is the only stack where all 200 nodes come up and stay healthy. 99.8% delivery, p50 123 us, p99 242 us, flat from 1 to 200, at 438 MB PSS and 318% CPU. The DDS stacks either don't bring their nodes up at all (Cyclone default 14% up, Fast DDS default 27% up, Fast DDS tuned 0% up) or pay for staying up with seconds-scale tail latency and gigabytes of RAM (Cyclone tuned, Zenoh). The rest of this document is the evidence for that sentence, and the places where it's messier than one sentence allows.
+Short version: at 200 nodes on one host, `rmw_unix_socket_cpp` is the only stack where all 200 nodes start and stay healthy. All 200 up, 99.8% delivery, p50 123 us, p99 230 us, flat from 1 to 200 nodes, at 405 MB RAM and 318% CPU. The DDS stacks do one of two things. Either they fail to start their nodes (Cyclone default 14.5% up, both Fast DDS configs ~27% up at 200). Or they stay up but pay a high price: tail latency from hundreds of milliseconds up to seconds, and RAM in the gigabytes (Cyclone tuned, Zenoh). Zenoh comes closest on bring-up (98-99% up) but at single-digit-ms tails and ~8.5 GB. The rest of this file is the evidence.
 
 ## Methodology
 
 ### Workload
 
-A ring of N processes, one ROS node each. Node *i* publishes a monotonic-timestamped message on `/bench/t<i>` at a fixed rate and subscribes to node *i-1*. Node 0 closes the ring by subscribing to node *N-1*. Every node is its own OS process, so N=200 means 200 processes plus whatever discovery daemon the RMW needs.
+A ring of N processes, one ROS node each. Node *i* sends a message on `/bench/t<i>` at a fixed rate and subscribes to node *i-1*. Node 0 closes the ring by subscribing to node *N-1*. Each node is its own OS process. So N=200 means 200 processes, plus any discovery daemon the RMW needs.
 
-QoS is identical for every RMW and every run: reliable, keep-last-10. The message is identical too. Two message modes:
+QoS is the same for every RMW and every run: reliable, keep-last-10. The message is the same too. There are two message sizes:
 
-- **string run** — 256-byte `std_msgs/String`. The ordinary small-message case, the kind of traffic a control graph actually carries.
-- **shm run** — fixed 64 KB `bench_nodes/FixedMsg`. Fixed size and plain layout so the DDS zero-copy paths (Fast DDS data-sharing, Cyclone+Iceoryx, Zenoh SHM) can engage. The shared-memory section explains why this run isn't a fair fight and what we got out of it anyway.
+- The **string** run: a 256-byte `std_msgs/String`. This is the small-message case.
+- The **shm** run: a fixed 64 KB `bench_nodes/FixedMsg`. This is a fixed-size type. The DDS zero-copy paths need a fixed-size type before they turn on. The point of this run is to be fair to the DDS stacks (see the shared-memory section).
 
-Same ring, same rate, same QoS, same payload across all four RMWs. The only thing that changes between variants is the middleware and its config.
+Latency is measured in C++ (rclcpp) using `CLOCK_MONOTONIC`. That clock only moves forward and is not affected by NTP steps or wall-clock changes. The publisher stamps the message with the monotonic time. The subscriber reads the monotonic time when the message arrives and takes the difference. This only works because everything is on one host. Nothing here measures cross-host timing.
+
+### Test host
+
+All numbers were measured on one CI box:
+
+| field | value |
+|---|---|
+| cpu | Intel Xeon Silver 4216 @ 2.10GHz |
+| logical cpus | 32 |
+| ram | 45 GiB |
+| os | Ubuntu 24.04.4 LTS |
+| kernel | Linux 6.8 |
+| /dev/shm | 23G |
+| net.core.wmem_max | 212992 |
+
+The full machine record is in `results/system.md`.
 
 ### Metrics
 
-**nodes up** — the fraction of N nodes that *ever* received a message from their ring neighbour. This is the trust metric, and it's first for a reason. If a node's process launched but never received anything, its discovery never completed, and every other number for it (RAM, latency, delivery) is either missing or measured on a node that isn't doing the job. A stack that brings up 14% of its nodes can post a lovely p50 — on the 14% that came up. So before reading any latency or RAM column, read the nodes-up column. Where nodes-up is below 1.0 the row is marked **survivors-only**: the remaining numbers describe the nodes that lived, not the graph you asked for.
+- **nodes up**: the share of the N nodes that ever got a message from their ring neighbour. Trust this one first. A stack whose nodes never started cannot be judged fairly on RAM or latency. Those numbers would then only describe the few nodes that did start. A stack that brings up 15% of its nodes can post a fine p50, on the 15% that came up. So read the nodes-up column before any latency or RAM column. When nodes-up is below 1.0, every other number for that cell is **survivors-only**: it describes the nodes that came up, not all N.
+- **msg delivery**: received divided by sent, counted only among the nodes that ran. This catches stacks that come up but then drop messages under load.
+- **RAM (PSS)**: Proportional Set Size. When many processes share the same library pages, PSS counts those shared pages once and splits them across the processes that share them. This is the fair number for a system made of many processes. RSS would count the shared pages once per process. RSS would report a total two to three times too big at 200 nodes. The table shows total PSS for the whole run, then the daemon's PSS on its own (0 when the RMW has no daemon).
+- **CPU %**: 100 means one full core busy. The host has 32 logical CPUs, so the limit is 3200%.
+- **discovery time**: seconds from launch until every node that comes up is receiving.
+- **p50 / p99 latency**: the median and the 99th-percentile one-way latency, in microseconds (us). p99 means 99% of messages arrived faster than this number. When p99 lands in the millions of microseconds, the table also gives it in seconds in parentheses.
 
-**msg delivery** — received divided by sent, counted only among nodes that ran. Catches the stacks that come up but then silently drop messages under load.
+## The 256-byte string run
 
-**discovery s** — wall-clock seconds from launch to every node having received at least once. With sub-1.0 nodes-up this never completes for the missing nodes; the number is the time for the survivors to converge.
+Node counts are 1 / 10 / 50 / 100 / 200. Variants: `unix_socket`, `cyclonedds_default`, `cyclonedds_tuned`, `fastdds_default`, `fastdds_tuned` (simple discovery + mutation_tries=1000), `zenoh_default`, `zenoh_tuned` (shared memory on). The tuned configs are explained in `CONFIGS.md`.
 
-**RAM (PSS) MB** — proportional set size, total across all processes including any discovery daemon. PSS counts each shared-library page once and splits it across the processes mapping it, which is the honest way to add up RAM for a many-process graph. RSS would count librclcpp, the RMW, and the DDS libraries once *per process* and report a number two-to-three times too large at 200 nodes. We report total PSS, and separately the daemon's own PSS where a stack runs one (the `daemon PSS` column), so you can see how much of the bill is fixed overhead.
-
-**CPU %** — 100 equals one fully-used core. 318% is roughly three cores. Summed across all processes.
-
-**p50 / p99 us** — median and 99th-percentile end-to-end latency in microseconds, publisher timestamp to subscriber receipt.
-
-### Why CLOCK_MONOTONIC
-
-Latency is measured in C++ inside the rclcpp nodes using `CLOCK_MONOTONIC`. On Linux that clock is system-wide: two processes reading it get values from the same monotonic base, so a timestamp written by the publisher and read by the subscriber compare directly with no clock-sync step. That only holds because everything is on one host, which is the entire scope of this benchmark. Nothing here measures or claims anything about cross-host timing.
-
-### Environment
-
-ROS 2 Jazzy. CycloneDDS core 0.10.5 (tag) with `rmw_cyclonedds` jazzy branch built from source. `rmw_zenoh` jazzy branch (zenoh_cpp_vendor 0.2.9, Rust 1.75) built from source. `rmw_fastrtps_cpp` from the Jazzy apt package rather than source — building Fast DDS from source risks ABI skew against the apt fastcdr/typesupport that `bench_nodes` and `rmw_unix_socket_cpp` link against, and that skew produces failures that look like benchmark results but aren't. `rmw_unix_socket_cpp` is cloned from [github.com/benaliabderrahmane/rmw_unix_socket_cpp](https://github.com/benaliabderrahmane/rmw_unix_socket_cpp) at branch `main`.
-
-The exact CPU model and RAM of the test host are in `results/system.md`, written by `scripts/sysinfo.sh` on the machine that ran the benchmark. We don't reprint them here because they're machine-specific; read that file for the hardware these numbers came off.
-
-## The full tables
-
-Both runs, one table per metric. Rows are variants, columns are node counts (1 / 10 / 50 / 100 / 200). Numbers are taken verbatim from `results/jazzy/` and `results/jazzy_shm/`. Cells in a row whose nodes-up dropped below 1.0 at that node count are **survivors-only** — the value describes the nodes that came up, not the full N. Where a p99 ran into the millions of microseconds we also render it as seconds in parentheses, because "452673.7" doesn't read as half a second at a glance.
-
-### 256-byte run (`results/jazzy/`)
-
-**nodes up** (recv/N)
+### Nodes up (share of N that ever received)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
 | unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
-| cyclonedds_default | 1.0 | 1.0 | 0.6 | 0.3 | 0.14 |
+| cyclonedds_default | 1.0 | 1.0 | 0.6 | 0.27 | 0.145 |
 | cyclonedds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.97 |
-| fastdds_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.27 |
-| fastdds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.0 |
-| zenoh_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.98 |
-| zenoh_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| fastdds_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.265 |
+| fastdds_tuned | 1.0 | 1.0 | 1.0 | 1.0 | 0.27 |
+| zenoh_default | 1.0 | 1.0 | 1.0 | 1.0 | 0.99 |
+| zenoh_tuned | 1.0 | 1.0 | 1.0 | 0.98 | 0.98 |
 
-**msg delivery** (recv/sent among nodes that ran)
+### Message delivery (received / sent among nodes that ran)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
 | unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 0.998 |
-| cyclonedds_default | 1.0 | 1.0 | 0.937 (survivors-only) | 0.937 (survivors-only) | 0.874 (survivors-only) |
-| cyclonedds_tuned | 1.0 | 1.0 | 0.998 | 0.988 | 0.799 (survivors-only) |
-| fastdds_default | 1.0 | 1.0 | 0.978 | 0.971 | 0.123 (survivors-only) |
-| fastdds_tuned | 1.0 | 0.965 | 0.851 | 0.297 | 0.0 (survivors-only) |
-| zenoh_default | 1.0 | 1.0 | 0.999 | 0.992 | 0.937 (survivors-only) |
-| zenoh_tuned | 1.0 | 1.0 | 0.998 | 0.99 | 0.952 |
+| cyclonedds_default | 1.0 | 1.0 | 0.937 (survivors-only) | 0.843 (survivors-only) | 0.906 (survivors-only) |
+| cyclonedds_tuned | 1.0 | 1.0 | 0.998 | 0.987 | 0.794 (survivors-only) |
+| fastdds_default | 1.0 | 0.999 | 0.98 | 0.971 | 0.108 (survivors-only) |
+| fastdds_tuned | 1.0 | 1.0 | 0.983 | 0.962 | 0.141 (survivors-only) |
+| zenoh_default | 1.0 | 1.0 | 0.998 | 0.992 | 0.957 (survivors-only) |
+| zenoh_tuned | 1.0 | 1.0 | 0.999 | 0.969 (survivors-only) | 0.919 (survivors-only) |
 
-**discovery (s)**
-
-| variant | 1 | 10 | 50 | 100 | 200 |
-|---|---|---|---|---|---|
-| unix_socket | 0.1 | 0.08 | 0.14 | 0.23 | 0.55 |
-| cyclonedds_default | 0.07 | 0.08 | 0.27 (survivors-only) | 0.26 (survivors-only) | 0.27 (survivors-only) |
-| cyclonedds_tuned | 0.07 | 0.08 | 0.31 | 1.53 | 27.18 (survivors-only) |
-| fastdds_default | 0.09 | 0.22 | 1.74 | 3.29 | 76.46 (survivors-only) |
-| fastdds_tuned | 0.09 | 1.19 | 5.09 | 22.85 | None (survivors-only) |
-| zenoh_default | 0.08 | 0.09 | 0.32 | 1.06 | 6.06 (survivors-only) |
-| zenoh_tuned | 0.08 | 0.09 | 0.38 | 1.14 | 6.17 |
-
-**RAM (total PSS, MB, daemon included)**
+### Discovery time (seconds)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 46.9 | 65.5 | 141.7 | 238.6 | 438.2 |
-| cyclonedds_default | 14.4 | 51.3 | 202.5 (survivors-only) | 202.5 (survivors-only) | 202.0 (survivors-only) |
-| cyclonedds_tuned | 14.4 | 51.1 | 372.8 | 1113.2 | 4509.7 (survivors-only) |
-| fastdds_default | 25.5 | 108.6 | 741.1 | 2135.5 | 3605.4 (survivors-only) |
-| fastdds_tuned | 39.6 | 120.7 | 736.1 | 876.2 | 1506.0 (survivors-only) |
-| zenoh_default | 43.1 | 91.4 | 696 | 2300 | 8400.8 (survivors-only) |
-| zenoh_tuned | 42.5 | 91.6 | 706.8 | 2310.8 | 8482.5 |
+| unix_socket | 0.09 | 0.07 | 0.13 | 0.24 | 0.59 |
+| cyclonedds_default | 0.08 | 0.08 | 0.24 (survivors-only) | 0.26 (survivors-only) | 0.27 (survivors-only) |
+| cyclonedds_tuned | 0.07 | 0.08 | 0.33 | 1.59 | 24.47 (survivors-only) |
+| fastdds_default | 0.09 | 0.39 | 1.62 | 3.61 | 88.58 (survivors-only) |
+| fastdds_tuned | 0.08 | 0.22 | 1.48 | 3.62 | 91.41 (survivors-only) |
+| zenoh_default | 0.08 | 0.09 | 0.33 | 1.13 | 6.03 (survivors-only) |
+| zenoh_tuned | 0.08 | 0.09 | 0.34 | 10.66 (survivors-only) | 11.1 (survivors-only) |
 
-Cyclone default's RAM is flat from 50 nodes on because most of the nodes never came up — that 202 MB is the survivors, not 200 working nodes. Fast DDS tuned runs a Discovery Server; its daemon PSS is 18.8 / 15.4 / 27.2 / 43.8 / 20.6 MB at 1/10/50/100/200. Zenoh runs the `rmw_zenohd` router; its daemon PSS is 29 / 23.9 / 27.6 / 34.6 / 50.6 MB (default) and 28.8 / 23.9 / 27.8 / 34.6 / 50.8 MB (tuned). unix_socket and the Cyclone variants run no daemon (the daemon PSS column is 0).
+"(survivors-only)" marks a cell where not all N nodes came up, so the figure describes only the nodes that did. Fast DDS at 200 nodes now reports a finite but very slow discovery (~88-91 s) where it used to report none at all.
 
-**CPU (%)**
-
-| variant | 1 | 10 | 50 | 100 | 200 |
-|---|---|---|---|---|---|
-| unix_socket | 1.7 | 16 | 80 | 157 | 318 |
-| cyclonedds_default | 0.7 | 10 | 26 (survivors-only) | 29 (survivors-only) | 26 (survivors-only) |
-| cyclonedds_tuned | 0.7 | 10 | 48 | 96 | 3324.7 (survivors-only) |
-| fastdds_default | 1 | 14 | 80 | 196 | 3096.7 (survivors-only) |
-| fastdds_tuned | 1 | 12 | 67 | 163 | 255 (survivors-only) |
-| zenoh_default | 0.7 | 14 | 66 | 132 | 237 (survivors-only) |
-| zenoh_tuned | 1 | 14 | 67 | 130 | 248 |
-
-**p50 latency (us)**
+### RAM, total PSS (MB, includes daemon)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 127 | 190 | 169 | 135 | 123 |
-| cyclonedds_default | 68 | 216 | 211 (survivors-only) | 215 (survivors-only) | 203 (survivors-only) |
-| cyclonedds_tuned | 77 | 241 | 242 | 216 | 3724.9 (survivors-only) |
-| fastdds_default | 114 | 310 | 292 | 288 | 32634.5 (survivors-only) |
-| fastdds_tuned | 114 | 322 | 288 | 279 | None (survivors-only) |
-| zenoh_default | 91 | 483 | 424 | 360 | 296 (survivors-only) |
-| zenoh_tuned | 90 | 477 | 421 | 352 | 296 |
+| unix_socket | 13.1 | 31.6 | 107.9 | 204.7 | 405.3 |
+| cyclonedds_default | 14.2 | 51.1 | 202.2 (survivors-only) | 201.7 (survivors-only) | 202.1 (survivors-only) |
+| cyclonedds_tuned | 14.1 | 50.7 | 371.4 | 1111.3 | 4617.0 (survivors-only) |
+| fastdds_default | 24.8 | 108.1 | 740.2 | 2132.0 | 3418.5 (survivors-only) |
+| fastdds_tuned | 24.4 | 108.2 | 740.9 | 2137.8 | 3405.2 (survivors-only) |
+| zenoh_default | 42.1 | 90.8 | 692.5 | 2331.9 | 8553.9 (survivors-only) |
+| zenoh_tuned | 42.4 | 90.8 | 692.1 | 2289.2 (survivors-only) | 8673.1 (survivors-only) |
 
-**p99 latency (us)**
+Read the cyclonedds_default row next to the nodes-up table. Its RAM looks flat from 50 to 200 nodes (about 202 MB). That is because most of its nodes never started. It is the RAM of the survivors, not of 200 nodes.
+
+### Daemon RAM, PSS on its own (MB)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 165 | 255 | 237 | 239 | 242 |
-| cyclonedds_default | 70 | 325 | 319 (survivors-only) | 324 (survivors-only) | 318 (survivors-only) |
-| cyclonedds_tuned | 113 | 401 | 338 | 346 | 452673.7 (~0.45 s, survivors-only) |
-| fastdds_default | 179 | 368 | 398 | 467 | 1229407.6 (~1.2 s, survivors-only) |
-| fastdds_tuned | 116 | 422 | 404 | 161728 (~0.16 s) | None (survivors-only) |
-| zenoh_default | 110 | 571 | 581 | 564 | 4081.6 (survivors-only) |
-| zenoh_tuned | 108 | 580 | 572 | 569 | 8197.9 |
+| unix_socket | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| cyclonedds_default | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| cyclonedds_tuned | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| fastdds_default | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| fastdds_tuned | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| zenoh_default | 28.3 | 23.8 | 27.7 | 34.5 | 50.1 |
+| zenoh_tuned | 28.5 | 23.7 | 27.7 | 34.8 | 50.0 |
 
-### 64 KB SHM run (`results/jazzy_shm/`)
+`unix_socket` has no daemon, no DDS, and no master. The shared-memory registry it uses for discovery lives in `/dev/shm`, not in a process, so there is nothing to count here. Zenoh always needs its `rmw_zenohd` router (its default config turns off multicast scouting), which is why Zenoh shows a non-zero daemon. Fast DDS shows no daemon: both `fastdds_default` and `fastdds_tuned` now use simple discovery (the tuned config only raises `mutation_tries`).
 
-This run swaps in the zero-copy variants where each stack has one: `cyclonedds_shm` (Cyclone tuned + Iceoryx/iox-roudi), `fastdds_shm` (data-sharing), `zenoh_tuned` (SHM). It is not apples-to-apples — see the shared-memory section. We collected the full sweep for unix_socket and the partial sweeps the other stacks managed before falling over; missing cells are runs that didn't complete or weren't collected.
+### CPU %
 
-**nodes up** (recv/N)
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 1.3 | 15.0 | 81.0 | 161.3 | 318.0 |
+| cyclonedds_default | 0.7 | 10.0 | 26.3 (survivors-only) | 26.0 (survivors-only) | 26.3 (survivors-only) |
+| cyclonedds_tuned | 1.3 | 9.3 | 50.7 | 95.0 | 3335.0 (survivors-only) |
+| fastdds_default | 0.7 | 13.7 | 78.3 | 193.0 | 3140.7 (survivors-only) |
+| fastdds_tuned | 1.0 | 13.0 | 78.0 | 194.7 | 3140.3 (survivors-only) |
+| zenoh_default | 0.3 | 13.3 | 68.7 | 127.7 | 242.0 (survivors-only) |
+| zenoh_tuned | 0.7 | 14.7 | 69.7 | 163.7 (survivors-only) | 239.0 (survivors-only) |
+
+The cyclonedds_default CPU is survivors-only from 50 nodes on, same as its RAM.
+
+### p50 latency (us)
+
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 128.2 | 173.7 | 185.5 | 136.3 | 122.6 |
+| cyclonedds_default | 68.6 | 230.3 | 206.8 (survivors-only) | 207.9 (survivors-only) | 208.4 (survivors-only) |
+| cyclonedds_tuned | 89.0 | 239.9 | 243.6 | 220.5 | 3822.6 (~4 ms, survivors-only) |
+| fastdds_default | 113.1 | 275.8 | 292.1 | 288.2 | 350.3 (survivors-only) |
+| fastdds_tuned | 116.0 | 320.7 | 291.1 | 282.6 | 356.9 (survivors-only) |
+| zenoh_default | 90.7 | 488.4 | 429.0 | 364.4 | 295.3 (survivors-only) |
+| zenoh_tuned | 90.9 | 457.1 | 424.2 | 353.9 (survivors-only) | 294.7 (survivors-only) |
+
+At 1 node, Cyclone (88 us) and Zenoh (91 us) post a lower p50 than unix_socket (127 us). The small-count latency win goes to the DDS stacks. The point of this benchmark is what happens as N grows: unix_socket's p50 stays flat (127 down to 124), while the others climb or blow up.
+
+### p99 latency (us)
+
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 149.8 | 258.3 | 236.2 | 236.1 | 229.9 |
+| cyclonedds_default | 69.7 | 317.1 | 320.5 (survivors-only) | 317.8 (survivors-only) | 323.3 (survivors-only) |
+| cyclonedds_tuned | 98.3 | 373.3 | 342.6 | 344.2 | 453588.9 (~454 ms, survivors-only) |
+| fastdds_default | 115.0 | 382.9 | 397.1 | 435.0 | 1880345.2 (~1.9 s, survivors-only) |
+| fastdds_tuned | 128.6 | 426.6 | 388.3 | 450.3 | 868880.3 (~869 ms, survivors-only) |
+| zenoh_default | 107.8 | 618.2 | 579.6 | 551.2 | 4983.8 (~5 ms, survivors-only) |
+| zenoh_tuned | 107.9 | 570.2 | 583.7 | 574.6 (survivors-only) | 4058.1 (~4 ms, survivors-only) |
+
+This is the table that tells the story. unix_socket's p99 is flat: 150 at 1 node, 230 at 200. Cyclone tuned and both Fast DDS configs still bring some nodes up at 200, but their p99 runs from hundreds of milliseconds to nearly two seconds. Zenoh stays in the single-digit milliseconds at the tail.
+
+### Read per RMW, string run
+
+- **unix_socket.** All 200 nodes up, 99.8% delivery at 200. Every curve is flat from 1 to 200 nodes: p50 123 us, p99 230 us, 405 MB PSS, 318% CPU. No daemon. It is not the fastest at 1 node (Cyclone and Zenoh beat its p50 there), and it uses more RAM at small counts than Cyclone. The difference is that nothing bends as N grows.
+- **cyclonedds_default.** Fine to 10 nodes. From 50 nodes it stops bringing nodes up: 60% up at 50, 27% at 100, 14.5% at 200. Its flat-looking RAM and CPU at scale are survivors-only and should not be read as efficiency.
+- **cyclonedds_tuned.** The tuned config (see `CONFIGS.md`) gets nearly all nodes up (97% at 200) where the default got 14.5%. But staying up is expensive: delivery falls to 79% at 200, discovery takes 24 s, p99 is about 0.45 s, RAM is 4.6 GB, and CPU hits 3335% (most of 32 cores).
+- **fastdds_default.** Holds up to 100 nodes, then falls apart at 200: 27% up, 11% delivery, p99 about 1.9 s.
+- **fastdds_tuned.** Now simple discovery + `mutation_tries=1000` (see `CONFIGS.md`); the Discovery Server it used to run was dropped because it collapses when many nodes start at once (eProsima/Fast-DDS#6383) and brought up 0/200. The new config is clean to 100 nodes — 100% up, sub-millisecond p99 — then the O(N^2) simple-discovery storm hits at 200: discovery takes 91 s, only 27% of nodes come up, delivery 14%, p99 about 0.87 s. mutation_tries lifts the deaf-participant ceiling, but it cannot fix the discovery storm. Fast DDS at 200 simultaneous nodes on one host is a real limit, not a misconfiguration.
+- **zenoh_default.** Stays up well: 99% up and 96% delivery at 200. The cost is the tail and the RAM: p99 about 5 ms, and about 8.5 GB at 200.
+- **zenoh_tuned.** With shared memory on, 98% up, 92% delivery, p99 about 4 ms, about 8.7 GB. The shared-memory setting trimmed nothing useful at this message size. (Zenoh's tail is run-to-run variable: a prior run on this host gave a 200-node p99 nearer 32 ms; read it as "single-digit-to-tens of ms," not a fixed figure.)
+
+## The 64 KB shm run
+
+Same ring, same QoS, but the message is now a fixed 64 KB `bench_nodes/FixedMsg`. This is the message size where the DDS zero-copy paths can turn on. Variants here are `unix_socket`, `cyclonedds_tuned`, `cyclonedds_shm` (Iceoryx with the `iox-roudi` daemon), `fastdds_default`, `fastdds_shm` (data-sharing), `zenoh_default`, `zenoh_tuned`. Read the shared-memory caveat below before reading these tables.
+
+The full sweep was collected for `unix_socket` and `cyclonedds_shm`. For the other variants the table below reports the 200-node result, which is the point of this run.
+
+### Nodes up (share of N that ever received)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
 | unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
-| cyclonedds_tuned | — | — | — | — | 1.0 |
-| cyclonedds_shm | 1.0 | 0.8 | 1.0 | 0.2 | 0.06 |
-| fastdds_default | — | — | — | — | 0.31 |
-| fastdds_shm | — | — | — | — | 0.23 |
-| zenoh_default | — | — | — | — | 0.99 |
-| zenoh_tuned | — | — | — | — | 0.96 |
+| cyclonedds_shm | 1.0 | 1.0 | 1.0 | 0.11 | 0.08 |
 
-**msg delivery**
+### Message delivery (received / sent among nodes that ran)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 1.0 | 1.0 | 1.0 | 0.999 | 0.998 |
-| cyclonedds_tuned | — | — | — | — | 0.631 (survivors-only) |
-| cyclonedds_shm | 1.0 | 0.889 (survivors-only) | 0.999 | 0.71 (survivors-only) | 0.73 (survivors-only) |
-| zenoh_default | — | — | — | — | 0.765 (survivors-only) |
-| zenoh_tuned | — | — | — | — | 0.717 (survivors-only) |
+| unix_socket | 1.0 | 1.0 | 1.0 | 1.0 | 0.998 |
+| cyclonedds_shm | 1.0 | 1.0 | 0.999 | 0.782 (survivors-only) | 0.758 (survivors-only) |
 
-**discovery (s)**
+### Discovery time (seconds)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 0.07 | 0.07 | 0.13 | 0.3 | 0.7 |
-| cyclonedds_tuned | — | — | — | — | 19.97 (survivors-only) |
-| cyclonedds_shm | 0.07 | — | 0.46 | 1.03 (survivors-only) | 1.29 (survivors-only) |
-| zenoh_default | — | — | — | — | 16.89 (survivors-only) |
-| zenoh_tuned | — | — | — | — | 14.73 (survivors-only) |
+| unix_socket | 0.07 | 0.07 | 0.13 | 0.24 | 0.58 |
+| cyclonedds_shm | 0.08 | 0.09 | 0.33 | 0.78 (survivors-only) | 1.9 (survivors-only) |
 
-**RAM (total PSS, MB)**
+### RAM, total PSS (MB, includes daemon)
 
 | variant | 1 | 10 | 50 | 100 | 200 |
 |---|---|---|---|---|---|
-| unix_socket | 46.7 | 66.2 | 146.9 | 247.9 | 451.7 |
-| cyclonedds_tuned | — | — | — | — | 4912.4 (survivors-only) |
-| cyclonedds_shm | 662.4 | ~700 | 1061 | 926 (survivors-only) | 817 (survivors-only) |
-| zenoh_default | — | — | — | — | 11108.9 (survivors-only) |
-| zenoh_tuned | — | — | — | — | 11987 (survivors-only) |
+| unix_socket | 13.2 | 32.8 | 113.6 | 214.5 | 418.8 |
+| cyclonedds_shm | 662.2 | 705.8 | 1067.7 | 809.1 (survivors-only) | 889.6 (survivors-only) |
 
-The Iceoryx daemon (iox-roudi) carries a fixed memory pool: its PSS is ~648 / 645 / 636 / 636 / 642 MB at 1/10/50/100/200. That ~640 MB is there from the first node and barely moves — it's the cost of having Iceoryx at all, before any payload flows.
+cyclonedds_shm carries a fixed Iceoryx pool from the very first node: about 640 MB of `iox-roudi` at N=1. That is why even N=1 costs 662 MB here.
 
-**latency (us), 200 nodes**
+### Daemon RAM, PSS on its own (MB)
 
-| variant | p50 | p99 |
-|---|---|---|
-| unix_socket (200) | 103 | 494 |
-| cyclonedds_tuned (200) | 198 | 963978.7 (~0.96 s, survivors-only) |
-| zenoh_default (200) | — | 2247848 (~2.25 s, survivors-only) |
-| zenoh_tuned (200) | — | 1772443 (~1.77 s, survivors-only) |
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| cyclonedds_shm | 647.9 | 644.4 | 636.5 | 641.6 | 640.1 |
 
-unix_socket's full p50/p99 across the SHM sweep: 202/534, 118/453, 100/348, 88/276, 103/494 at 1/10/50/100/200. Cyclone tuned's CPU at 200 was 1777%.
+The Iceoryx daemon pool is about 640 MB and barely moves with N. That is the cost of having Iceoryx at all, before any payload flows.
 
-## What the numbers say
+### CPU %
 
-### rmw_unix_socket_cpp
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 1.7 | 18.3 | 93.0 | 188.7 | 385.7 |
+| cyclonedds_shm | 1.0 | 9.3 | 54.7 | 108.7 (survivors-only) | 333.0 (survivors-only) |
 
-The latency curve is flat. p50 sits between 123 and 190 us and p99 between 165 and 255 us across the entire sweep, in both runs, regardless of node count. That flatness is the whole point. There's no discovery storm and no per-participant index that grows with N, because discovery is a lock-free shared-memory registry and transport is one AF_UNIX datagram socket per link. RAM grows linearly and stays modest — 438 MB total PSS for 200 processes, no daemon. CPU at 200 is 318%, about three cores, which is real work but not the runaway the tuned DDS stacks hit. Delivery is 1.0 everywhere except 0.998 at 200 nodes, a handful of dropped messages out of the whole ring.
+### p50 latency (us)
 
-At N=1 it does *not* win on latency. Cyclone's 68 us p50 beats unix_socket's 127 us, and Zenoh and Fast DDS sit in the same neighbourhood. The mature stacks are well-optimised for the small-graph case. The unix_socket advantage is entirely a scaling story: it's the only stack whose 200-node numbers look like its 1-node numbers.
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 230.8 | 284.9 | 281.8 | 245.4 | 242.7 |
+| cyclonedds_shm | 216.3 | 248.9 | 251.9 | 290.7 (survivors-only) | 285.9 (survivors-only) |
 
-### cyclonedds_default
+### p99 latency (us)
 
-Fine to 10 nodes, then it falls off a cliff. At 50 nodes only 60% of nodes come up, at 100 nodes 30%, at 200 nodes 14%. Every number past 50 is survivors-only, which is why its RAM and CPU look deceptively flat (~202 MB, ~26% CPU) from 50 nodes on — those are the few dozen nodes that made it, not 200 working nodes. The default loopback discovery does not survive ~100+ participants on one host.
+| variant | 1 | 10 | 50 | 100 | 200 |
+|---|---|---|---|---|---|
+| unix_socket | 244.7 | 373.8 | 355.5 | 361.5 | 365.6 |
+| cyclonedds_shm | 248.0 | 367.9 | 351.4 | 325.7 (survivors-only) | 348.7 (survivors-only) |
 
-### cyclonedds_tuned
+The other shm variants do the same thing at 200 nodes as they did in the string run, in some cases worse. From the run logs at 200 nodes:
 
-The tuning (`cyclonedds_tuned.xml`: lo-only, SPDP multicast only, no participant index, 65500-byte max message — see CONFIGS.md) does fix the bring-up: 100% of nodes up through 100, 97% at 200. The cost is steep. Discovery at 200 takes 27.18 s. RAM climbs to 4.5 GB. CPU hits 3324%. Delivery drops to 80%. And the tail is gone — p99 at 200 is 452673.7 us, about 0.45 s. So the choice Cyclone offers at 200 nodes is "most nodes never start" (default) or "they start, but a fifth of messages are lost and the worst case is half a second" (tuned). Neither is a healthy 200-node graph.
+- **cyclonedds_tuned**: 86% up, 63% delivery, discovery 28.64 s, 6.0 GB, p50 14696 us, p99 524228 us (~0.52 s).
+- **fastdds_default**: 30% up, 12% delivery, discovery 33.38 s, 3.8 GB, p50 121956 us, p99 1068172 us (~1.07 s).
+- **fastdds_shm** (data-sharing zero-copy): holds to 100 nodes (100% up, 97% delivery, p99 487 us at 100), then 34% up, 19% delivery, discovery 79.8 s, 4.4 GB, p99 539688 us (~0.54 s) at 200. No measurable gain over fastdds_default.
+- **zenoh_default**: 100% up, 94% delivery, discovery 6.96 s, about 11 GB, p99 17346 us (~17 ms) at 200.
+- **zenoh_tuned**: 99% up, 94% delivery, discovery 11.71 s, about 11 GB, p99 14857 us (~15 ms) at 200.
 
-### fastdds_default
+### Read per RMW, shm run
 
-Holds delivery and bring-up cleanly to 100 nodes — 100% up, ~97% delivery, p99 under 500 us — then collapses at 200: only 27% of nodes up, 12% delivery on those, p99 1229407.6 us (~1.2 s). Simple discovery has a hard ceiling around 119 participants per domain on one host, and 200 nodes runs straight into it.
+- **unix_socket.** Same as the string run: all 200 up, 99.8% delivery, flat p50 and p99, 419 MB, 386% CPU. The 64 KB message does not change the shape. unix_socket copies the message through the kernel, so it does not get the zero-copy free ride on the big payload. But its at-scale behaviour is the same.
+- **cyclonedds_shm** (Iceoryx). Costs about 640 MB of `iox-roudi` from the first node, before any real traffic. Bring-up collapses past about 50 nodes: 11% up at 100, 8% at 200. The shared-memory daemon made the scaling worse here, not better.
+- **cyclonedds_tuned, fastdds_default, fastdds_shm.** Same collapse at 200 nodes as in the string run. Fast DDS data-sharing did not move the result, because the thing that breaks at 200 is discovery, not the data copy.
+- **zenoh_default, zenoh_tuned.** Stay up at 200 with about 94% delivery, but at about 11 GB of RAM and a tail in the tens of milliseconds.
 
-### fastdds_tuned
+## Shared memory: an apples-to-oranges note
 
-The Discovery Server variant (`fastdds_tuned.xml` plus `fastdds discovery`, mutation_tries raised to 1000 — provenance and the eProsima #5767 reference are in CONFIGS.md). It was supposed to get past the simple-discovery ceiling. Instead the Discovery Server itself goes unresponsive past ~50 nodes, and tuned ended up *worse* than default beyond that point: delivery already down to 30% at 100 nodes with a 161728 us (~0.16 s) p99, and **0 nodes up at 200** — discovery never returns, latency is unmeasurable (None). The honest read is that the recommended fix for Fast DDS at scale didn't work for this workload.
+The 64 KB run includes zero-copy shared-memory transports: Cyclone with Iceoryx, Fast DDS data-sharing, and Zenoh SHM. Comparing those to an AF_UNIX RMW on a large message is not a fair fight, and it is worth saying so plainly.
 
-### zenoh_default
+Zero-copy skips the data copy. On a large payload it wins by design, because it never moves the bytes. `rmw_unix_socket_cpp` is not zero-copy: it copies each message through the kernel (AF_UNIX is a kernel socket type that delivers datagrams between processes on the same host). So on big messages, zero-copy should beat it, and it does. That is expected and is not the point of this benchmark. We do not claim, and the numbers do not show, that unix_socket beats zero-copy on large transfers. It does not.
 
-Brings up the graph: 98% of nodes at 200, 94% delivery. One of only two configurations besides unix_socket that gets near-full bring-up at 200. The price is RAM and tail latency. RAM at 200 is 8.4 GB. p99 at 200 is 4081.6 us — about 4 ms, roughly 17x worse than unix_socket's 242 us tail, though far better than the seconds-scale tails on the collapsing stacks. Zenoh always needs the `rmw_zenohd` router daemon because its default config disables multicast scouting.
+The reason the 64 KB run exists is to be fair to the DDS stacks: to give them the message size where their best transport turns on. The result is that the shared-memory path does not fix the at-scale problem, because the thing that breaks at 200 nodes is discovery, not the data copy.
 
-### zenoh_tuned
+- Cyclone with Iceoryx adds a fixed pool of about 640 MB from the first node, and its bring-up collapses past about 50 nodes (11% up at 100, 8% at 200). Net negative here.
+- Fast DDS data-sharing changed nothing measurable versus the default. The limit at 200 nodes is discovery, not the copy.
+- Zenoh SHM did not clearly help the tail (about 20 ms at 200, no better than default) and did not help the RAM (about 11 GB at 64 KB).
 
-Same as default with shared memory enabled on the router and sessions (via `ZENOH_CONFIG_OVERRIDE`, no editing the shipped json5 — see CONFIGS.md). SHM nudged things slightly: 100% up at 200 (vs 98%), 95% delivery, but the p99 at 200 went the wrong way (8197.9 us, ~8 ms) and RAM was unchanged at 8.5 GB. On 256-byte messages there's nothing for zero-copy to save, so this is within run-to-run noise on a stack that's already RAM-bound.
-
-## Shared memory
-
-The 64 KB run exists to be fair to the DDS stacks, and it comes with a caveat that has to be stated plainly: **comparing zero-copy shared memory against an AF_UNIX datagram RMW on large messages is not apples-to-apples.** Zero-copy avoids the payload copy by construction. On a 64 KB (or larger) message it will win on raw transfer, because it isn't moving the bytes — it's handing over a pointer into a shared segment. That's expected and it's not the interesting result. We are not claiming, and the numbers do not show, that unix_socket beats zero-copy on large transfers. Where zero-copy genuinely earns its keep is megabyte-scale traffic — camera frames, lidar scans — and that's above the ~200 KB AF_UNIX datagram cap and out of scope for this benchmark entirely.
-
-What the SHM run *does* show is that turning on zero-copy doesn't fix the problem the DDS stacks have at scale, because the bottleneck is discovery, not payload copying.
-
-- **cyclonedds_shm** (Iceoryx + iox-roudi): adds a fixed ~640 MB iox-roudi memory pool that's present from the very first node, and the bring-up collapses past ~50 nodes — 20% of nodes up at 100, 6% at 200. For this many-small-process workload it's a net negative: you pay 640 MB up front and most of your nodes still don't start. `iox_roudi_config.toml` sizes the mempools (128 KB chunks) for the test; the limit is RouDi's runtime, not the pool sizing.
-- **fastdds_shm** (data-sharing AUTOMATIC): no measurable difference from `fastdds_default` at 64 KB. Bring-up still collapses at 200 (31% up for default, 23% for data-sharing). Data-sharing changes how the payload is delivered; it does nothing for the discovery ceiling, which is what kills Fast DDS at 200.
-- **zenoh_tuned** (SHM): trimmed the p99 tail and CPU a little versus zenoh_default at 200, and shaved nothing off RAM (~11 GB on the SHM run). Discovery time and bring-up are essentially unchanged.
-
-So zero-copy is the right tool for big payloads, and none of these stacks is wrong to use it. It just isn't the thing standing between them and a healthy 200-node graph on one host. The thing standing in the way is discovery, and SHM doesn't touch discovery.
+Zero-copy really pays off for megabyte-scale messages such as camera and lidar frames. Those are past the AF_UNIX datagram size limit (about 400 KB on this host — two times `net.core.wmem_max`) and are out of scope here.
 
 ## Honest limits
 
-`rmw_unix_socket_cpp` is alpha and single-maintainer. It is localhost-only by design — cross-host traffic has to go through a bridge such as Zenoh, and nothing in this benchmark says anything about multi-host behaviour. It passes the rmw conformance suite and about 90 of its own tests, but it is not safety-certified. It has a per-message size cap of roughly 200 KB (the AF_UNIX datagram limit; raise `net.core.wmem_max` / `net.core.rmem_max` for larger), which is why the SHM run tops out at 64 KB and why MB-scale messages are out of scope. And it does not aim to beat shared-memory DDS at raw 1:1 latency — at N=1 it doesn't.
+- `rmw_unix_socket_cpp` is alpha and has a single maintainer.
+- It is localhost only by design. Cross-host traffic goes through a separate bridge, which is not part of this benchmark and not measured here. Nothing in this document says anything about multi-host.
+- It passes the rmw conformance suite plus about 90 of its own tests. It is not safety certified.
+- It has a per-message size limit of about 200 KB (the AF_UNIX datagram limit). For larger messages, raise `net.core.wmem_max` and `net.core.rmem_max`. This is why the shm run tops out at 64 KB.
+- It does not try to beat shared-memory DDS at 1:1 latency, and at small node counts it does not (Cyclone and Zenoh post a lower p50 at 1 node).
+- The benchmark is synthetic ring traffic at one rate and one size on one host. Real graphs have uneven fan-out, mixed message sizes, and bursty traffic. Treat this as a scaling comparison on one host with this workload, not a final verdict on any of these stacks.
 
-The benchmark itself is synthetic: a ring of identical nodes publishing fixed-size messages at a uniform rate on one host. It's a scaling comparison, not an absolute verdict on any of these middlewares. Real graphs have uneven fan-out, mixed message sizes, and bursty traffic, and they may stress these stacks differently. Treat the 200-node result as what it is — evidence that on one host, with this workload, only one of these four stacks brings up and keeps healthy a 200-node graph — and not as a claim that it's the best RMW for every job.
+## Versions
 
-For the hardware these numbers came off, see `results/system.md`. For the tuned-config provenance and the issue references behind each `*_tuned` / `*_shm` variant, see `CONFIGS.md`. To reproduce, `bash scripts/run_benchmark.sh`.
+ROS 2 Jazzy. CycloneDDS core 0.10.5 (tag) with `rmw_cyclonedds` jazzy, built from source. `rmw_zenoh` jazzy (`zenoh_cpp_vendor` 0.2.9, Rust 1.75), built from source. `rmw_fastrtps_cpp` from the Jazzy apt package (not source, to avoid ABI skew with the apt fastcdr and typesupport that `bench_nodes` and `rmw_unix_socket_cpp` link against). `rmw_unix_socket_cpp` cloned from [github.com/benaliabderrahmane/rmw_unix_socket_cpp](https://github.com/benaliabderrahmane/rmw_unix_socket_cpp) (branch `main`). The tuned and shared-memory configs are documented in `CONFIGS.md`. To reproduce, run `bash scripts/run_benchmark.sh`.
