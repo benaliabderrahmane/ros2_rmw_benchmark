@@ -11,16 +11,16 @@ from pathlib import Path
 
 import rmw_matrix
 
-# Metric key -> (column header, format, "higher is better"? for arrow hints).
+# Each metric: JSON key -> markdown column header. One section per metric.
 METRICS = [
-    ("delivery_ratio_nodes", "Nodes up (recv/N)", "{}"),
-    ("delivery_ratio_msgs", "Msg delivery (survivors)", "{}"),
-    ("discovery_time_s", "Discovery (s)", "{}"),
-    ("ram_total_pss_mb", "RAM PSS (MB)", "{}"),
-    ("ram_node_rss_mb", "RAM RSS (MB)", "{}"),
-    ("cpu_total_pct", "CPU (%)", "{}"),
-    ("lat_p50_us", "Latency p50 (us)", "{}"),
-    ("lat_p99_us", "Latency p99 (us)", "{}"),
+    ("delivery_ratio_nodes", "Nodes up (recv/N)"),
+    ("delivery_ratio_msgs", "Msg delivery (survivors)"),
+    ("discovery_time_s", "Discovery (s)"),
+    ("ram_total_pss_mb", "RAM PSS (MB)"),
+    ("ram_node_rss_mb", "RAM RSS (MB)"),
+    ("cpu_total_pct", "CPU (%)"),
+    ("lat_p50_us", "Latency p50 (us)"),
+    ("lat_p99_us", "Latency p99 (us)"),
 ]
 
 CSV_FIELDS = [
@@ -58,7 +58,7 @@ def write_markdown(results, out_path):
     lines = ["# RMW benchmark summary", ""]
     lines.append(f"Node counts: {', '.join(map(str, node_counts))}")
     lines.append("")
-    for key, header, _ in METRICS:
+    for key, header in METRICS:
         lines.append(f"## {header}")
         lines.append("")
         lines.append("| Variant | " + " | ".join(f"{n} nodes" for n in node_counts) + " |")

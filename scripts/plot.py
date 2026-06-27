@@ -4,7 +4,8 @@
   python3 plot.py --indir results/jazzy --out results/graphs/jazzy.png --title "..."
 
 One panel per metric: x = node count (log), y = metric, one line per variant.
-The local Unix-socket RMW is drawn thick/black as the reference.
+unix_socket (this project's RMW) is drawn thick and black, since it is the
+baseline the other RMWs are being compared against.
 """
 
 import argparse
@@ -17,7 +18,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-# Stable order + style. unix_socket is the reference line (thick, black).
+# Draw order and per-variant color. The fixed order keeps the legend stable across
+# runs; unix_socket (this project's RMW) is the thick black baseline.
 ORDER = [
     "unix_socket",
     "cyclonedds_default", "cyclonedds_tuned", "cyclonedds_shm",

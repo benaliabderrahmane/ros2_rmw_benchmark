@@ -38,6 +38,7 @@ ARG CYCLONEDDS_REF=0.10.5
 ARG RMW_CYCLONEDDS_REF=jazzy
 ARG RMW_ZENOH_REF=jazzy
 ARG UNIX_SOCKET_REF=main
+ARG UNIX_SOCKET_REPO=https://github.com/benaliabderrahmane/rmw_unix_socket_cpp.git
 ARG RUST_VERSION=1.75.0
 
 WORKDIR /bench_ws
@@ -89,11 +90,11 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
     && colcon build --merge-install --packages-up-to rmw_zenoh_cpp \
          --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-# --- rmw_unix_socket_cpp (cloned) + the benchmark nodes (change most -> last) -
-# Cloned rather than copied so this repo is self-contained. To pin exactly,
-# set UNIX_SOCKET_REF to a tag/SHA (branch HEAD is cached until the ref changes).
-RUN git clone -b ${UNIX_SOCKET_REF} \
-      https://github.com/benaliabderrahmane/rmw_unix_socket_cpp.git \
+# --- rmw_unix_socket_cpp + the benchmark nodes (these change most, so build last) -
+# The RMW under test lives in its own repo; we clone it (rather than vendor a copy)
+# so this benchmark repo stays self-contained. To benchmark your own fork or pin a
+# commit, build with --build-arg UNIX_SOCKET_REPO=<url> and/or UNIX_SOCKET_REF=<branch|tag|sha>.
+RUN git clone -b ${UNIX_SOCKET_REF} ${UNIX_SOCKET_REPO} \
       /bench_ws/src/rmw_unix_socket_cpp
 COPY bench_nodes /bench_ws/src/bench_nodes
 

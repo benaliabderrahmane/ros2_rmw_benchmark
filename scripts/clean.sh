@@ -5,8 +5,7 @@
 #   bash scripts/clean.sh         # image + stray containers + results
 #   bash scripts/clean.sh --all   # also: build cache, base image, /dev/shm
 #
-# NOTE: never use `docker system prune -a` for this — it would delete unrelated
-# images too.
+# Don't use `docker system prune -a` for this; it would delete unrelated images too.
 set -e
 IMAGE="${IMAGE:-rmw-bench:jazzy}"
 BENCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,6 +25,8 @@ if [ "${1:-}" = "--all" ]; then
   echo "== base image (if unused elsewhere) =="
   docker rmi ros:jazzy-ros-base 2>/dev/null || echo "  (not present / in use)"
   echo "== host /dev/shm leftovers =="
+  # SHM files left behind by the benchmarked RMWs: ros2_uds_* (unix_socket),
+  # *.zenoh (Zenoh), iceoryx_* (Cyclone + iceoryx). Safe to remove when no run is live.
   rm -f /dev/shm/ros2_uds_* /dev/shm/*.zenoh /dev/shm/iceoryx_* 2>/dev/null \
     || echo "  need privileges: sudo rm -f /dev/shm/ros2_uds_* /dev/shm/*.zenoh /dev/shm/iceoryx_*"
 else

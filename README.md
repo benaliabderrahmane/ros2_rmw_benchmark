@@ -57,11 +57,17 @@ NODES="1 10" PHASES=string bash scripts/run_benchmark.sh
 
 ## Results
 
-256-byte string run:
+The two charts below are the quickest way to read the whole sweep. Each one has
+four panels — nodes up, total RAM, CPU, and tail latency — plotted against node
+count for every RMW, so you can see exactly where each one starts to diverge as
+the graph grows. `unix_socket` is the thick black line; watch how flat it stays
+while the others bend upward past 50–100 nodes.
+
+**256-byte string run** (the main comparison):
 
 ![256-byte string run: nodes up, RAM, CPU, latency vs node count](results/graphs/jazzy.png)
 
-64 KB SHM run:
+**64 KB SHM run** (gives the DDS zero-copy paths their best case):
 
 ![64 KB SHM run: nodes up, RAM, CPU, latency vs node count](results/graphs/jazzy_shm.png)
 

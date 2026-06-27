@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Print the machine's hardware/OS so a result set records where it was measured.
-# Run it on the box you ran the benchmark on:
+# Run this on the same machine you ran the benchmark on, so the output records
+# what hardware produced the numbers:
 #   bash scripts/sysinfo.sh > results/system.md
 set -e
 

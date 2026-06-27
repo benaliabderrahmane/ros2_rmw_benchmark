@@ -20,7 +20,7 @@ CONFIGS_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "co
 class RunSpec:
     key: str
     rmw: str
-    config: str               # "default" or "tuned"
+    config: str               # "default", "tuned", or "shm"
     env: dict                 # extra env for the node processes
     daemon_cmd: list = None   # discovery daemon argv, or None
     daemon_env: dict = field(default_factory=dict)

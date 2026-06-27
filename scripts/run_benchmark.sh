@@ -8,8 +8,9 @@
 #                                         #   inside the container, or on a host
 #                                         #   with ROS + the four RMWs sourced).
 #
-# Override anything via env, e.g. a quick smoke run:
+# Override any setting via env, e.g. a quick smoke run:
 #   NODES="1 10" PHASES=string VARIANTS="unix_socket cyclonedds_tuned" ./scripts/run_benchmark.sh
+# (The variant names are the keys in scripts/rmw_matrix.py.)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,23 +21,25 @@ IMAGE="${IMAGE:-rmw-bench:jazzy}"
 NODES="${NODES:-1 10 50 100 200}"
 RATE="${RATE:-20}"
 SIZE="${SIZE:-256}"
-# Sized for the 200-node end: discovery for the DDS stacks can take seconds, so
-# settle long enough to sample steady state, run long enough to clear it.
+# Tuned for the 200-node case: DDS discovery can take several seconds, so settle
+# long enough to reach steady state before the measurement window starts.
 DURATION="${DURATION:-30}"
 WARMUP="${WARMUP:-5}"
 SETTLE="${SETTLE:-10}"
 CPU_WINDOW="${CPU_WINDOW:-3}"
 DEGREE="${DEGREE:-1}"   # senders each node subscribes to (1 = ring, >1 = fan-out)
 
-# Which phases the one-command run does, and the variant set for each. The SHM
-# phase swaps in the shared-memory variants and a fixed-size message.
+# Phases the one-command run does, and the variants tested in each:
+#   string: variable-length string messages over the default/tuned transports.
+#   shm:    fixed-size messages over the shared-memory transports.
+# Set PHASES to run a subset.
 PHASES="${PHASES:-string shm}"
 STRING_VARIANTS="${STRING_VARIANTS:-unix_socket cyclonedds_default cyclonedds_tuned fastdds_default fastdds_tuned zenoh_default zenoh_tuned}"
 SHM_VARIANTS="${SHM_VARIANTS:-unix_socket cyclonedds_tuned cyclonedds_shm fastdds_default fastdds_shm zenoh_default zenoh_tuned}"
 
 run_native() {
-  # Drives one matrix from env: VARIANTS, FIXED, OUTDIR. Raise the open-file
-  # limit for ~200 node processes (best effort).
+  # Runs one variants x nodes matrix. Reads VARIANTS, FIXED, OUTDIR from env.
+  # 200 nodes open a lot of files and sockets, so raise the fd limit if we can.
   ulimit -n 1048576 2>/dev/null || ulimit -n 65536 2>/dev/null || true
   if ! command -v ros2 >/dev/null 2>&1; then
     [ -f "/opt/ros/$ROS_DISTRO/setup.bash" ] && source "/opt/ros/$ROS_DISTRO/setup.bash"
@@ -75,11 +78,13 @@ preflight() {
   local shm wmem
   shm=$(df -B1 --output=size /dev/shm 2>/dev/null | tail -1 | tr -d ' ')
   wmem=$(cat /proc/sys/net/core/wmem_max 2>/dev/null)
-  echo "preflight: /dev/shm=$(( ${shm:-0} / 1024 / 1024 ))MB  net.core.wmem_max=${wmem:-?}  (run uses --ipc=host)"
+  # The container runs with --ipc=host, so the SHM transports use the host's
+  # /dev/shm reported here; that is why we check its size.
+  echo "preflight: /dev/shm=$(( ${shm:-0} / 1024 / 1024 ))MB  net.core.wmem_max=${wmem:-?}"
   [ -n "$shm" ] && [ "$shm" -lt 1073741824 ] && \
     echo "  WARNING: /dev/shm < 1GB — Zenoh / Cyclone-Iceoryx SHM pools may not fit." >&2
   if [ -n "$wmem" ] && [ "$wmem" -lt 50331648 ]; then
-    echo "  NOTE: rmw_unix_socket_cpp requests a 48 MiB socket buffer (SO_SNDBUF/SO_RCVBUF=50331648); net.core.wmem_max=${wmem} clamps it. Fine for this benchmark's message sizes." >&2
+    echo "  rmw_unix_socket_cpp asks for a 48 MiB socket buffer (50331648 bytes); the kernel clamps it to wmem_max=${wmem}. This benchmark's messages are small, so the clamp does not matter here." >&2
     echo "  To match what the RMW asks for (e.g. for larger messages): sudo sysctl -w net.core.wmem_max=50331648 net.core.rmem_max=50331648" >&2
   fi
 }
@@ -114,7 +119,8 @@ run_docker() {
     esac
   done
 
-  # Container wrote results as root; hand them back so they're usable sans sudo.
+  # The container runs as root, so result files land root-owned. chown them back
+  # to the invoking user so they can be read and deleted without sudo on the host.
   docker run --rm -v "$REPO/results:/r" "$IMAGE" \
     chown -R "$(id -u):$(id -g)" /r >/dev/null 2>&1 || true
 
@@ -122,7 +128,10 @@ run_docker() {
   echo "  results: $REPO/results/   (summary.md per phase, system.md, graphs/)"
 }
 
-if [ "${1:-}" = "--native" ] || [ "${BENCH_IN_CONTAINER:-}" = "1" ]; then
+# Two modes, one file. With --native we run a single matrix in place; that is what
+# each phase runs inside the container (see run_phase). Without it we build the
+# image and orchestrate the whole run through Docker.
+if [ "${1:-}" = "--native" ]; then
   run_native
 else
   run_docker

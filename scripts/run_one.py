@@ -42,17 +42,20 @@ def find_load_node():
             return path
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-    raise SystemExit("cannot locate load_node; source the overlay or set BENCH_LOAD_NODE")
+    raise SystemExit(
+        "cannot find the load_node benchmark binary. Build the workspace and "
+        "source its install/setup.bash, or set BENCH_LOAD_NODE to the binary path.")
 
 
 def percentile(values, p):
+    # Linear interpolation between the two samples straddling rank p (p in 0..1).
     if not values:
         return None
     s = sorted(values)
-    k = (len(s) - 1) * p
-    f = int(k)
-    c = min(f + 1, len(s) - 1)
-    return round(s[f] + (s[c] - s[f]) * (k - f), 1) if f != c else round(s[f], 1)
+    rank = (len(s) - 1) * p
+    lo = int(rank)
+    hi = min(lo + 1, len(s) - 1)
+    return round(s[lo] + (s[hi] - s[lo]) * (rank - lo), 1)
 
 
 def stop_daemon(pgid):
@@ -77,7 +80,8 @@ def main():
     ap.add_argument("--settle", type=float, default=6.0, help="wait before sampling RAM/CPU")
     ap.add_argument("--cpu-window", type=float, default=3.0)
     ap.add_argument("--fixed", action="store_true",
-                    help="use the fixed-size FixedMsg (64 KiB) so DDS zero-copy SHM engages")
+                    help="send a fixed-size 64 KiB message instead of a string, so the "
+                         "DDS zero-copy shared-memory paths can engage")
     ap.add_argument("--degree", type=int, default=1,
                     help="senders each node subscribes to (1 = ring, >1 = fan-out)")
     ap.add_argument("--outdir", required=True)
@@ -96,7 +100,7 @@ def main():
         shutil.rmtree(raw_dir)
     raw_dir.mkdir(parents=True, exist_ok=True)
 
-    # Environment shared by all node processes.
+    # Env passed to every node process: the RMW choice plus the variant's extra vars.
     node_env = os.environ.copy()
     node_env["RMW_IMPLEMENTATION"] = spec.rmw
     node_env.update(spec.env)
@@ -184,8 +188,9 @@ def main():
     if sampling_suspect:
         print(f"  NOTE: discovery ({discovery_s}s) > settle ({args.settle}s); "
               f"RAM/CPU sample may include discovery transient", file=sys.stderr)
-    # Each node subscribes to eff_degree senders (load_node clamps the same way),
-    # so the messages it should receive are sent * eff_degree.
+    # Expected receives per node = sent * eff_degree, since each node subscribes
+    # to eff_degree senders. load_node applies this SAME clamp, so keep the two in
+    # sync or the delivery ratio below comes out wrong.
     eff_degree = max(1, min(args.degree, n - 1))
     result = {
         "variant": spec.key, "rmw": spec.rmw, "config": spec.config,
