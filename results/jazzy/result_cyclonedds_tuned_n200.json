@@ -5,28 +5,220 @@
   "msg": "string",
   "nodes": 200,
   "rate_hz": 20.0,
+  "degree": 1,
   "size_bytes": 256,
   "duration_s": 30.0,
   "warmup_s": 5.0,
-  "launch_elapsed_s": 0.93,
-  "discovery_time_s": 24.47,
+  "launch_elapsed_s": 0.94,
+  "discovery_time_s": 26.75,
   "sampling_during_discovery": true,
-  "nodes_received": 194,
-  "delivery_ratio_nodes": 0.97,
-  "delivery_ratio_msgs": 0.794,
-  "ram_node_pss_mb": 4617.0,
-  "ram_node_rss_mb": 7308.9,
+  "nodes_received": 197,
+  "delivery_ratio_nodes": 0.985,
+  "delivery_ratio_msgs": 0.797,
+  "ram_node_pss_mb": 4707.6,
+  "ram_node_rss_mb": 7450.1,
   "ram_daemon_pss_mb": 0.0,
-  "ram_total_pss_mb": 4617.0,
-  "ram_pss_per_node_mb": 23.09,
-  "cpu_total_pct": 3335.0,
+  "ram_total_pss_mb": 4707.6,
+  "ram_pss_per_node_mb": 23.54,
+  "cpu_total_pct": 3326.0,
   "cpu_daemon_pct": 0.0,
-  "cpu_per_node_pct": 16.68,
-  "lat_p50_us": 3822.6,
-  "lat_p99_us": 453588.9,
-  "lat_mean_us": 37594.1,
-  "lat_max_us": 1625418.5,
-  "lat_samples": 89773,
+  "cpu_per_node_pct": 16.63,
+  "lat_p50_us": 3612.8,
+  "lat_p99_us": 452582.5,
+  "lat_mean_us": 35136.6,
+  "lat_max_us": 1829731.5,
+  "lat_samples": 90230,
+  "mem_total_mb": 46779.2,
+  "cpu_timeseries": [
+    {
+      "t_s": 1.72,
+      "cpu_pct": 4084.0
+    },
+    {
+      "t_s": 2.49,
+      "cpu_pct": 4072.0
+    },
+    {
+      "t_s": 3.28,
+      "cpu_pct": 4010.0
+    },
+    {
+      "t_s": 4.1,
+      "cpu_pct": 4170.0
+    },
+    {
+      "t_s": 4.89,
+      "cpu_pct": 4140.0
+    },
+    {
+      "t_s": 5.69,
+      "cpu_pct": 4142.0
+    },
+    {
+      "t_s": 6.52,
+      "cpu_pct": 4212.0
+    },
+    {
+      "t_s": 7.33,
+      "cpu_pct": 4062.0
+    },
+    {
+      "t_s": 8.16,
+      "cpu_pct": 4132.0
+    },
+    {
+      "t_s": 8.92,
+      "cpu_pct": 4002.0
+    },
+    {
+      "t_s": 9.72,
+      "cpu_pct": 4012.0
+    },
+    {
+      "t_s": 10.53,
+      "cpu_pct": 4088.0
+    },
+    {
+      "t_s": 11.36,
+      "cpu_pct": 4118.0
+    },
+    {
+      "t_s": 12.15,
+      "cpu_pct": 4156.0
+    },
+    {
+      "t_s": 12.93,
+      "cpu_pct": 4096.0
+    },
+    {
+      "t_s": 13.69,
+      "cpu_pct": 3876.0
+    },
+    {
+      "t_s": 14.45,
+      "cpu_pct": 4084.0
+    },
+    {
+      "t_s": 15.22,
+      "cpu_pct": 3934.0
+    },
+    {
+      "t_s": 15.96,
+      "cpu_pct": 3866.0
+    },
+    {
+      "t_s": 16.73,
+      "cpu_pct": 3926.0
+    },
+    {
+      "t_s": 17.47,
+      "cpu_pct": 3888.0
+    },
+    {
+      "t_s": 18.22,
+      "cpu_pct": 3912.0
+    },
+    {
+      "t_s": 18.97,
+      "cpu_pct": 4026.0
+    },
+    {
+      "t_s": 19.76,
+      "cpu_pct": 4118.0
+    },
+    {
+      "t_s": 20.54,
+      "cpu_pct": 4056.0
+    },
+    {
+      "t_s": 21.31,
+      "cpu_pct": 3934.0
+    },
+    {
+      "t_s": 22.06,
+      "cpu_pct": 4048.0
+    },
+    {
+      "t_s": 22.84,
+      "cpu_pct": 4032.0
+    },
+    {
+      "t_s": 23.57,
+      "cpu_pct": 3936.0
+    },
+    {
+      "t_s": 24.34,
+      "cpu_pct": 4120.0
+    },
+    {
+      "t_s": 25.11,
+      "cpu_pct": 3992.0
+    },
+    {
+      "t_s": 25.84,
+      "cpu_pct": 3890.0
+    },
+    {
+      "t_s": 26.57,
+      "cpu_pct": 3906.0
+    },
+    {
+      "t_s": 27.34,
+      "cpu_pct": 4012.0
+    },
+    {
+      "t_s": 28.08,
+      "cpu_pct": 3932.0
+    },
+    {
+      "t_s": 28.82,
+      "cpu_pct": 3942.0
+    },
+    {
+      "t_s": 29.53,
+      "cpu_pct": 3888.0
+    },
+    {
+      "t_s": 30.37,
+      "cpu_pct": 4192.0
+    },
+    {
+      "t_s": 31.21,
+      "cpu_pct": 4274.0
+    },
+    {
+      "t_s": 32.09,
+      "cpu_pct": 4224.0
+    },
+    {
+      "t_s": 32.84,
+      "cpu_pct": 4070.0
+    },
+    {
+      "t_s": 33.62,
+      "cpu_pct": 4110.0
+    },
+    {
+      "t_s": 34.34,
+      "cpu_pct": 3882.0
+    },
+    {
+      "t_s": 35.04,
+      "cpu_pct": 3794.0
+    },
+    {
+      "t_s": 35.67,
+      "cpu_pct": 3604.0
+    },
+    {
+      "t_s": 36.25,
+      "cpu_pct": 3286.0
+    },
+    {
+      "t_s": 36.76,
+      "cpu_pct": 0.0
+    }
+  ],
   "config_files": {
     "CYCLONEDDS_URI": "/benchmarks/configs/cyclonedds_tuned.xml"
   },

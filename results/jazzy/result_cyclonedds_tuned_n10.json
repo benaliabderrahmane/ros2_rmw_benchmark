@@ -5,6 +5,7 @@
   "msg": "string",
   "nodes": 10,
   "rate_hz": 20.0,
+  "degree": 1,
   "size_bytes": 256,
   "duration_s": 30.0,
   "warmup_s": 5.0,
@@ -14,19 +15,266 @@
   "nodes_received": 10,
   "delivery_ratio_nodes": 1.0,
   "delivery_ratio_msgs": 1.0,
-  "ram_node_pss_mb": 50.7,
-  "ram_node_rss_mb": 164.4,
+  "ram_node_pss_mb": 51.1,
+  "ram_node_rss_mb": 166.3,
   "ram_daemon_pss_mb": 0.0,
-  "ram_total_pss_mb": 50.7,
-  "ram_pss_per_node_mb": 5.07,
+  "ram_total_pss_mb": 51.1,
+  "ram_pss_per_node_mb": 5.11,
   "cpu_total_pct": 9.3,
   "cpu_daemon_pct": 0.0,
   "cpu_per_node_pct": 0.93,
-  "lat_p50_us": 239.9,
-  "lat_p99_us": 373.3,
-  "lat_mean_us": 248.8,
-  "lat_max_us": 391.2,
-  "lat_samples": 4995,
+  "lat_p50_us": 235.0,
+  "lat_p99_us": 346.5,
+  "lat_mean_us": 242.8,
+  "lat_max_us": 394.2,
+  "lat_samples": 4996,
+  "mem_total_mb": 46779.2,
+  "cpu_timeseries": [
+    {
+      "t_s": 0.51,
+      "cpu_pct": 78.0
+    },
+    {
+      "t_s": 1.01,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 1.51,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 2.01,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 2.51,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 3.02,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 3.52,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 4.02,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 4.52,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 5.02,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 5.53,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 6.03,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 6.53,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 7.03,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 7.54,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 8.04,
+      "cpu_pct": 18.0
+    },
+    {
+      "t_s": 8.54,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 9.04,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 9.54,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 10.05,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 10.55,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 11.05,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 11.55,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 12.06,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 12.56,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 13.06,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 13.56,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 14.06,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 14.57,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 15.07,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 15.57,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 16.07,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 16.58,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 17.08,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 17.58,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 18.08,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 18.58,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 19.09,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 19.59,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 20.09,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 20.59,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 21.1,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 21.6,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 22.1,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 22.6,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 23.1,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 23.61,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 24.11,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 24.61,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 25.11,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 25.62,
+      "cpu_pct": 2.0
+    },
+    {
+      "t_s": 26.12,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 26.62,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 27.12,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 27.63,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 28.13,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 28.63,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 29.13,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 29.63,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 30.14,
+      "cpu_pct": 72.0
+    },
+    {
+      "t_s": 30.64,
+      "cpu_pct": 0.0
+    }
+  ],
   "config_files": {
     "CYCLONEDDS_URI": "/benchmarks/configs/cyclonedds_tuned.xml"
   },

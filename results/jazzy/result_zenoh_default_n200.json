@@ -5,28 +5,280 @@
   "msg": "string",
   "nodes": 200,
   "rate_hz": 20.0,
+  "degree": 1,
   "size_bytes": 256,
   "duration_s": 30.0,
   "warmup_s": 5.0,
-  "launch_elapsed_s": 0.91,
-  "discovery_time_s": 6.03,
+  "launch_elapsed_s": 1.06,
+  "discovery_time_s": 6.31,
   "sampling_during_discovery": false,
-  "nodes_received": 198,
-  "delivery_ratio_nodes": 0.99,
-  "delivery_ratio_msgs": 0.957,
-  "ram_node_pss_mb": 8503.8,
-  "ram_node_rss_mb": 12241.8,
-  "ram_daemon_pss_mb": 50.1,
-  "ram_total_pss_mb": 8553.9,
-  "ram_pss_per_node_mb": 42.52,
-  "cpu_total_pct": 242.0,
+  "nodes_received": 200,
+  "delivery_ratio_nodes": 1.0,
+  "delivery_ratio_msgs": 0.954,
+  "ram_node_pss_mb": 8561.1,
+  "ram_node_rss_mb": 12398.9,
+  "ram_daemon_pss_mb": 50.3,
+  "ram_total_pss_mb": 8611.4,
+  "ram_pss_per_node_mb": 42.81,
+  "cpu_total_pct": 241.3,
   "cpu_daemon_pct": 0.0,
   "cpu_per_node_pct": 1.21,
-  "lat_p50_us": 295.3,
-  "lat_p99_us": 4983.8,
-  "lat_mean_us": 448.9,
-  "lat_max_us": 114063.6,
-  "lat_samples": 97137,
+  "lat_p50_us": 296.7,
+  "lat_p99_us": 7902.9,
+  "lat_mean_us": 577.9,
+  "lat_max_us": 205707.1,
+  "lat_samples": 97747,
+  "mem_total_mb": 46779.2,
+  "cpu_timeseries": [
+    {
+      "t_s": 1.72,
+      "cpu_pct": 3532.0
+    },
+    {
+      "t_s": 2.57,
+      "cpu_pct": 3722.0
+    },
+    {
+      "t_s": 3.4,
+      "cpu_pct": 3970.0
+    },
+    {
+      "t_s": 4.26,
+      "cpu_pct": 3906.0
+    },
+    {
+      "t_s": 5.17,
+      "cpu_pct": 4038.0
+    },
+    {
+      "t_s": 5.98,
+      "cpu_pct": 3642.0
+    },
+    {
+      "t_s": 6.59,
+      "cpu_pct": 1404.0
+    },
+    {
+      "t_s": 7.13,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 7.67,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 8.22,
+      "cpu_pct": 270.0
+    },
+    {
+      "t_s": 8.76,
+      "cpu_pct": 222.0
+    },
+    {
+      "t_s": 9.3,
+      "cpu_pct": 258.0
+    },
+    {
+      "t_s": 9.84,
+      "cpu_pct": 232.0
+    },
+    {
+      "t_s": 10.39,
+      "cpu_pct": 250.0
+    },
+    {
+      "t_s": 10.93,
+      "cpu_pct": 248.0
+    },
+    {
+      "t_s": 11.47,
+      "cpu_pct": 262.0
+    },
+    {
+      "t_s": 12.01,
+      "cpu_pct": 230.0
+    },
+    {
+      "t_s": 12.55,
+      "cpu_pct": 288.0
+    },
+    {
+      "t_s": 13.09,
+      "cpu_pct": 216.0
+    },
+    {
+      "t_s": 13.63,
+      "cpu_pct": 284.0
+    },
+    {
+      "t_s": 14.17,
+      "cpu_pct": 194.0
+    },
+    {
+      "t_s": 14.72,
+      "cpu_pct": 274.0
+    },
+    {
+      "t_s": 15.29,
+      "cpu_pct": 264.0
+    },
+    {
+      "t_s": 15.85,
+      "cpu_pct": 272.0
+    },
+    {
+      "t_s": 16.4,
+      "cpu_pct": 236.0
+    },
+    {
+      "t_s": 16.95,
+      "cpu_pct": 250.0
+    },
+    {
+      "t_s": 17.5,
+      "cpu_pct": 250.0
+    },
+    {
+      "t_s": 18.06,
+      "cpu_pct": 228.0
+    },
+    {
+      "t_s": 18.61,
+      "cpu_pct": 262.0
+    },
+    {
+      "t_s": 19.17,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 19.73,
+      "cpu_pct": 248.0
+    },
+    {
+      "t_s": 20.28,
+      "cpu_pct": 212.0
+    },
+    {
+      "t_s": 20.83,
+      "cpu_pct": 290.0
+    },
+    {
+      "t_s": 21.38,
+      "cpu_pct": 228.0
+    },
+    {
+      "t_s": 21.93,
+      "cpu_pct": 256.0
+    },
+    {
+      "t_s": 22.48,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 23.03,
+      "cpu_pct": 236.0
+    },
+    {
+      "t_s": 23.58,
+      "cpu_pct": 226.0
+    },
+    {
+      "t_s": 24.14,
+      "cpu_pct": 258.0
+    },
+    {
+      "t_s": 24.69,
+      "cpu_pct": 218.0
+    },
+    {
+      "t_s": 25.24,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 25.79,
+      "cpu_pct": 236.0
+    },
+    {
+      "t_s": 26.35,
+      "cpu_pct": 252.0
+    },
+    {
+      "t_s": 26.9,
+      "cpu_pct": 248.0
+    },
+    {
+      "t_s": 27.45,
+      "cpu_pct": 236.0
+    },
+    {
+      "t_s": 28.0,
+      "cpu_pct": 230.0
+    },
+    {
+      "t_s": 28.55,
+      "cpu_pct": 258.0
+    },
+    {
+      "t_s": 29.11,
+      "cpu_pct": 242.0
+    },
+    {
+      "t_s": 29.65,
+      "cpu_pct": 230.0
+    },
+    {
+      "t_s": 30.2,
+      "cpu_pct": 1072.0
+    },
+    {
+      "t_s": 30.74,
+      "cpu_pct": 3154.0
+    },
+    {
+      "t_s": 31.34,
+      "cpu_pct": 3398.0
+    },
+    {
+      "t_s": 31.96,
+      "cpu_pct": 3464.0
+    },
+    {
+      "t_s": 32.54,
+      "cpu_pct": 3340.0
+    },
+    {
+      "t_s": 33.07,
+      "cpu_pct": 1602.0
+    },
+    {
+      "t_s": 33.59,
+      "cpu_pct": 776.0
+    },
+    {
+      "t_s": 34.12,
+      "cpu_pct": 602.0
+    },
+    {
+      "t_s": 34.65,
+      "cpu_pct": 146.0
+    },
+    {
+      "t_s": 35.18,
+      "cpu_pct": 102.0
+    },
+    {
+      "t_s": 35.72,
+      "cpu_pct": 114.0
+    },
+    {
+      "t_s": 36.25,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 36.76,
+      "cpu_pct": 0.0
+    }
+  ],
   "config_files": {},
   "notes": "rmw_zenohd router required (default config disables multicast scouting)"
 }

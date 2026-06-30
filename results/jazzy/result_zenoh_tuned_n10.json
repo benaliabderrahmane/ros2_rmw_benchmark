@@ -5,28 +5,272 @@
   "msg": "string",
   "nodes": 10,
   "rate_hz": 20.0,
+  "degree": 1,
   "size_bytes": 256,
   "duration_s": 30.0,
   "warmup_s": 5.0,
-  "launch_elapsed_s": 0.0,
+  "launch_elapsed_s": 0.01,
   "discovery_time_s": 0.09,
   "sampling_during_discovery": false,
   "nodes_received": 10,
   "delivery_ratio_nodes": 1.0,
   "delivery_ratio_msgs": 1.0,
-  "ram_node_pss_mb": 67.1,
-  "ram_node_rss_mb": 238.3,
-  "ram_daemon_pss_mb": 23.7,
-  "ram_total_pss_mb": 90.8,
-  "ram_pss_per_node_mb": 6.71,
-  "cpu_total_pct": 14.7,
+  "ram_node_pss_mb": 67.8,
+  "ram_node_rss_mb": 243.4,
+  "ram_daemon_pss_mb": 23.8,
+  "ram_total_pss_mb": 91.6,
+  "ram_pss_per_node_mb": 6.78,
+  "cpu_total_pct": 14.3,
   "cpu_daemon_pct": 0.0,
-  "cpu_per_node_pct": 1.47,
-  "lat_p50_us": 457.1,
-  "lat_p99_us": 570.2,
-  "lat_mean_us": 450.4,
-  "lat_max_us": 674.3,
+  "cpu_per_node_pct": 1.43,
+  "lat_p50_us": 492.9,
+  "lat_p99_us": 610.8,
+  "lat_mean_us": 484.8,
+  "lat_max_us": 3185.1,
   "lat_samples": 4997,
+  "mem_total_mb": 46779.2,
+  "cpu_timeseries": [
+    {
+      "t_s": 0.51,
+      "cpu_pct": 96.0
+    },
+    {
+      "t_s": 1.01,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 1.51,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 2.02,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 2.52,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 3.02,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 3.53,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 4.03,
+      "cpu_pct": 18.0
+    },
+    {
+      "t_s": 4.54,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 5.04,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 5.54,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 6.05,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 6.55,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 7.06,
+      "cpu_pct": 18.0
+    },
+    {
+      "t_s": 7.56,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 8.06,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 8.57,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 9.07,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 9.58,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 10.08,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 10.58,
+      "cpu_pct": 24.0
+    },
+    {
+      "t_s": 11.09,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 11.59,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 12.1,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 12.6,
+      "cpu_pct": 20.0
+    },
+    {
+      "t_s": 13.1,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 13.61,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 14.11,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 14.62,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 15.12,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 15.62,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 16.13,
+      "cpu_pct": 18.0
+    },
+    {
+      "t_s": 16.63,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 17.14,
+      "cpu_pct": 6.0
+    },
+    {
+      "t_s": 17.64,
+      "cpu_pct": 20.0
+    },
+    {
+      "t_s": 18.14,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 18.65,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 19.15,
+      "cpu_pct": 20.0
+    },
+    {
+      "t_s": 19.66,
+      "cpu_pct": 4.0
+    },
+    {
+      "t_s": 20.16,
+      "cpu_pct": 22.0
+    },
+    {
+      "t_s": 20.66,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 21.17,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 21.67,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 22.18,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 22.68,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 23.18,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 23.69,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 24.19,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 24.7,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 25.2,
+      "cpu_pct": 18.0
+    },
+    {
+      "t_s": 25.7,
+      "cpu_pct": 10.0
+    },
+    {
+      "t_s": 26.21,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 26.71,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 27.22,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 27.72,
+      "cpu_pct": 8.0
+    },
+    {
+      "t_s": 28.22,
+      "cpu_pct": 14.0
+    },
+    {
+      "t_s": 28.73,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 29.23,
+      "cpu_pct": 12.0
+    },
+    {
+      "t_s": 29.74,
+      "cpu_pct": 16.0
+    },
+    {
+      "t_s": 30.24,
+      "cpu_pct": 2.0
+    }
+  ],
   "config_files": {
     "ZENOH_CONFIG_OVERRIDE": "transport/shared_memory/enabled=true"
   },

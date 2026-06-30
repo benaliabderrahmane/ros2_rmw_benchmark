@@ -5,28 +5,260 @@
   "msg": "string",
   "nodes": 200,
   "rate_hz": 20.0,
+  "degree": 1,
   "size_bytes": 256,
   "duration_s": 30.0,
   "warmup_s": 5.0,
   "launch_elapsed_s": 0.22,
-  "discovery_time_s": 0.59,
+  "discovery_time_s": 0.57,
   "sampling_during_discovery": false,
   "nodes_received": 200,
   "delivery_ratio_nodes": 1.0,
-  "delivery_ratio_msgs": 0.998,
-  "ram_node_pss_mb": 405.3,
-  "ram_node_rss_mb": 2888.8,
+  "delivery_ratio_msgs": 0.997,
+  "ram_node_pss_mb": 405.6,
+  "ram_node_rss_mb": 2932.8,
   "ram_daemon_pss_mb": 0.0,
-  "ram_total_pss_mb": 405.3,
+  "ram_total_pss_mb": 405.6,
   "ram_pss_per_node_mb": 2.03,
-  "cpu_total_pct": 318.0,
+  "cpu_total_pct": 322.0,
   "cpu_daemon_pct": 0.0,
-  "cpu_per_node_pct": 1.59,
-  "lat_p50_us": 122.6,
-  "lat_p99_us": 229.9,
-  "lat_mean_us": 130.1,
-  "lat_max_us": 600.3,
-  "lat_samples": 99771,
+  "cpu_per_node_pct": 1.61,
+  "lat_p50_us": 122.7,
+  "lat_p99_us": 230.4,
+  "lat_mean_us": 130.7,
+  "lat_max_us": 488.7,
+  "lat_samples": 99751,
+  "mem_total_mb": 46779.2,
+  "cpu_timeseries": [
+    {
+      "t_s": 0.75,
+      "cpu_pct": 1594.0
+    },
+    {
+      "t_s": 1.29,
+      "cpu_pct": 366.0
+    },
+    {
+      "t_s": 1.83,
+      "cpu_pct": 266.0
+    },
+    {
+      "t_s": 2.37,
+      "cpu_pct": 368.0
+    },
+    {
+      "t_s": 2.91,
+      "cpu_pct": 298.0
+    },
+    {
+      "t_s": 3.45,
+      "cpu_pct": 356.0
+    },
+    {
+      "t_s": 3.98,
+      "cpu_pct": 290.0
+    },
+    {
+      "t_s": 4.52,
+      "cpu_pct": 344.0
+    },
+    {
+      "t_s": 5.06,
+      "cpu_pct": 308.0
+    },
+    {
+      "t_s": 5.6,
+      "cpu_pct": 342.0
+    },
+    {
+      "t_s": 6.14,
+      "cpu_pct": 336.0
+    },
+    {
+      "t_s": 6.68,
+      "cpu_pct": 328.0
+    },
+    {
+      "t_s": 7.22,
+      "cpu_pct": 336.0
+    },
+    {
+      "t_s": 7.76,
+      "cpu_pct": 302.0
+    },
+    {
+      "t_s": 8.3,
+      "cpu_pct": 350.0
+    },
+    {
+      "t_s": 8.83,
+      "cpu_pct": 310.0
+    },
+    {
+      "t_s": 9.37,
+      "cpu_pct": 348.0
+    },
+    {
+      "t_s": 9.91,
+      "cpu_pct": 342.0
+    },
+    {
+      "t_s": 10.45,
+      "cpu_pct": 302.0
+    },
+    {
+      "t_s": 10.99,
+      "cpu_pct": 334.0
+    },
+    {
+      "t_s": 11.53,
+      "cpu_pct": 314.0
+    },
+    {
+      "t_s": 12.07,
+      "cpu_pct": 352.0
+    },
+    {
+      "t_s": 12.61,
+      "cpu_pct": 310.0
+    },
+    {
+      "t_s": 13.15,
+      "cpu_pct": 346.0
+    },
+    {
+      "t_s": 13.69,
+      "cpu_pct": 326.0
+    },
+    {
+      "t_s": 14.23,
+      "cpu_pct": 326.0
+    },
+    {
+      "t_s": 14.76,
+      "cpu_pct": 302.0
+    },
+    {
+      "t_s": 15.3,
+      "cpu_pct": 354.0
+    },
+    {
+      "t_s": 15.84,
+      "cpu_pct": 306.0
+    },
+    {
+      "t_s": 16.38,
+      "cpu_pct": 344.0
+    },
+    {
+      "t_s": 16.92,
+      "cpu_pct": 312.0
+    },
+    {
+      "t_s": 17.46,
+      "cpu_pct": 344.0
+    },
+    {
+      "t_s": 18.0,
+      "cpu_pct": 314.0
+    },
+    {
+      "t_s": 18.54,
+      "cpu_pct": 344.0
+    },
+    {
+      "t_s": 19.08,
+      "cpu_pct": 318.0
+    },
+    {
+      "t_s": 19.62,
+      "cpu_pct": 346.0
+    },
+    {
+      "t_s": 20.15,
+      "cpu_pct": 300.0
+    },
+    {
+      "t_s": 20.69,
+      "cpu_pct": 334.0
+    },
+    {
+      "t_s": 21.23,
+      "cpu_pct": 314.0
+    },
+    {
+      "t_s": 21.77,
+      "cpu_pct": 338.0
+    },
+    {
+      "t_s": 22.31,
+      "cpu_pct": 324.0
+    },
+    {
+      "t_s": 22.85,
+      "cpu_pct": 354.0
+    },
+    {
+      "t_s": 23.39,
+      "cpu_pct": 304.0
+    },
+    {
+      "t_s": 23.93,
+      "cpu_pct": 364.0
+    },
+    {
+      "t_s": 24.47,
+      "cpu_pct": 284.0
+    },
+    {
+      "t_s": 25.01,
+      "cpu_pct": 344.0
+    },
+    {
+      "t_s": 25.55,
+      "cpu_pct": 338.0
+    },
+    {
+      "t_s": 26.09,
+      "cpu_pct": 310.0
+    },
+    {
+      "t_s": 26.63,
+      "cpu_pct": 322.0
+    },
+    {
+      "t_s": 27.17,
+      "cpu_pct": 336.0
+    },
+    {
+      "t_s": 27.71,
+      "cpu_pct": 320.0
+    },
+    {
+      "t_s": 28.25,
+      "cpu_pct": 330.0
+    },
+    {
+      "t_s": 28.79,
+      "cpu_pct": 338.0
+    },
+    {
+      "t_s": 29.33,
+      "cpu_pct": 330.0
+    },
+    {
+      "t_s": 29.87,
+      "cpu_pct": 324.0
+    },
+    {
+      "t_s": 30.4,
+      "cpu_pct": 464.0
+    },
+    {
+      "t_s": 30.92,
+      "cpu_pct": 0.0
+    }
+  ],
   "config_files": {},
   "notes": ""
 }
