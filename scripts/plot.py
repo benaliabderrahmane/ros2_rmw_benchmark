@@ -54,11 +54,128 @@ def load(indir):
     return data
 
 
+def local_meminfo_mb():
+    """Total RAM (MB) of the machine running this script, or None."""
+    try:
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    return round(int(line.split()[1]) / 1024.0, 1)
+    except (OSError, ValueError, IndexError):
+        pass
+    return None
+
+
+def figure_total_ram(data, variants, nodes, cli_total):
+    """One denominator for the whole RAM%% figure, so a single line never mixes
+    totals across node counts. The measuring machine's recorded mem_total_mb wins
+    when the runs agree on it; then --total-ram-mb; then this machine's
+    /proc/meminfo. Returns (mb_or_None, used_fallback)."""
+    recorded = {data[v][n]["mem_total_mb"]
+                for v in variants for n in nodes
+                if data[v].get(n) and data[v][n].get("mem_total_mb")}
+    if len(recorded) == 1:
+        return recorded.pop(), False
+    if cli_total:
+        return cli_total, True
+    # No single recorded total (old data, or runs from different machines): fall back.
+    return local_meminfo_mb(), True
+
+
+def _style(ax, nodes):
+    ax.set_xscale("log")
+    ax.set_xticks(nodes)
+    ax.set_xticklabels([str(n) for n in nodes])
+    ax.set_xlabel("nodes")
+    ax.grid(True, which="both", ls=":", alpha=0.4)
+
+
+def plot_ram_pct(data, variants, nodes, out, cli_total):
+    """RAM (PSS) as a percentage of total system RAM, vs node count."""
+    total, used_fallback = figure_total_ram(data, variants, nodes, cli_total)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    if not total:
+        ax.axis("off")
+        ax.text(0.5, 0.5, "No total-RAM available to compute a percentage.\n"
+                "Pass --total-ram-mb, or re-run so results record mem_total_mb.",
+                ha="center", va="center", fontsize=12)
+    else:
+        for v in variants:
+            xs, ys = [], []
+            for n in nodes:
+                d = data[v].get(n)
+                pss = d.get("ram_total_pss_mb") if d else None
+                if not d or pss is None:
+                    continue
+                xs.append(n)
+                ys.append(round(100.0 * pss / total, 2))
+            if not xs:
+                continue
+            lw = 2.8 if v == "unix_socket" else 1.6
+            z = 5 if v == "unix_socket" else 2
+            ax.plot(xs, ys, marker="o", ms=4, lw=lw, color=COLORS.get(v), label=v, zorder=z)
+        ax.set_title("RAM PSS as % of total system RAM", fontsize=12)
+        ax.set_ylabel("% of total RAM")
+        _style(ax, nodes)
+        ax.legend(fontsize=9, frameon=False)
+        if used_fallback:
+            ax.text(0.5, -0.13, "note: no recorded total RAM in these runs; "
+                    "used --total-ram-mb or this machine's /proc/meminfo",
+                    transform=ax.transAxes, ha="center", va="top", fontsize=8, color="#888")
+    fig.tight_layout()
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    fig.savefig(out, dpi=110)
+    plt.close(fig)
+    print(f"wrote {out}")
+
+
+def plot_startup_cpu(data, variants, node_list, out):
+    """CPU% vs time (startup curve) -- one subplot per requested node count."""
+    present = [n for n in node_list
+               if any(data[v].get(n, {}).get("cpu_timeseries") for v in variants)]
+    fig, axes = plt.subplots(1, max(1, len(present)),
+                             figsize=(7 * max(1, len(present)), 5.5), squeeze=False)
+    axes = axes[0]
+    if not present:
+        axes[0].axis("off")
+        axes[0].text(0.5, 0.5,
+                     "No cpu_timeseries in these results.\n"
+                     "Re-run the benchmark on this branch (run_one.py now records it)\n"
+                     "to populate the startup CPU-vs-time graph.",
+                     ha="center", va="center", fontsize=12)
+    for ax, n in zip(axes, present):
+        for v in variants:
+            d = data[v].get(n)
+            series = d.get("cpu_timeseries") if d else None
+            if not series:
+                continue
+            xs = [s["t_s"] for s in series]
+            ys = [s["cpu_pct"] for s in series]
+            lw = 2.8 if v == "unix_socket" else 1.6
+            z = 5 if v == "unix_socket" else 2
+            ax.plot(xs, ys, lw=lw, color=COLORS.get(v), label=v, zorder=z)
+        ax.set_title(f"Startup CPU vs time -- {n} nodes", fontsize=12)
+        ax.set_xlabel("time since launch (s)")
+        ax.set_ylabel("CPU (%, 100 = 1 core)")
+        ax.grid(True, ls=":", alpha=0.4)
+        ax.legend(fontsize=8, frameon=False)
+    fig.tight_layout()
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    fig.savefig(out, dpi=110)
+    plt.close(fig)
+    print(f"wrote {out}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--indir", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--title", default="RMW benchmark")
+    ap.add_argument("--total-ram-mb", type=float, default=None,
+                    help="total system RAM (MB) for the RAM%% graph when a run did "
+                         "not record it; defaults to this machine's /proc/meminfo")
+    ap.add_argument("--startup-nodes", default="100,200",
+                    help="comma-separated node counts for the startup CPU-vs-time graph")
     args = ap.parse_args()
 
     data = load(args.indir)
@@ -112,6 +229,15 @@ def main():
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.savefig(args.out, dpi=110)
     print(f"wrote {args.out}")
+
+    # Two extra figures, written alongside --out (the dashboard above is unchanged).
+    base, ext = os.path.splitext(args.out)
+    try:
+        startup_nodes = [int(x) for x in args.startup_nodes.split(",") if x.strip()]
+    except ValueError:
+        startup_nodes = [100, 200]
+    plot_ram_pct(data, variants, nodes, f"{base}_ram_pct{ext}", args.total_ram_mb)
+    plot_startup_cpu(data, variants, startup_nodes, f"{base}_startup_cpu{ext}")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -58,6 +59,30 @@ def percentile(values, p):
     return round(s[lo] + (s[hi] - s[lo]) * (rank - lo), 1)
 
 
+def startup_profiler(node_pids, daemon_pgid, t0, interval_s, stop_evt, series):
+    """Background sampler for the startup CPU-vs-time curve.
+
+    Appends {t_s, cpu_pct} every `interval_s` until `stop_evt` is set or every
+    process has been gone for two samples. It reads /proc only (liveness via
+    /proc/<pid>, never the Popen objects), so its sampling does not collide with
+    the main thread's wait()/kill() on the same children, and its per-pid tick
+    reads leave the existing steady-state CPU/RAM aggregates untouched.
+    """
+    dead_streak = 0
+    while not stop_evt.is_set():
+        alive = [pid for pid in node_pids if os.path.exists(f"/proc/{pid}")]
+        daemon_pids = measure.pgid_members(daemon_pgid) if daemon_pgid else []
+        pids = alive + daemon_pids
+        cpu = measure.sample_cpu(pids, interval_s)  # sleeps interval_s -> also the cadence
+        series.append({"t_s": round((mono_ns() - t0) / 1e9, 2), "cpu_pct": cpu})
+        if not pids:
+            dead_streak += 1
+            if dead_streak >= 2:
+                break
+        else:
+            dead_streak = 0
+
+
 def stop_daemon(pgid):
     if pgid is None:
         return
@@ -79,6 +104,8 @@ def main():
     ap.add_argument("--warmup", type=float, default=3.0)
     ap.add_argument("--settle", type=float, default=6.0, help="wait before sampling RAM/CPU")
     ap.add_argument("--cpu-window", type=float, default=3.0)
+    ap.add_argument("--profile-interval", type=float, default=0.5,
+                    help="cadence (s) of the startup CPU time-series sampler")
     ap.add_argument("--fixed", action="store_true",
                     help="send a fixed-size 64 KB message instead of a string, so the "
                          "DDS zero-copy shared-memory paths can engage")
@@ -142,6 +169,18 @@ def main():
     launch_elapsed = (mono_ns() - t0) / 1e9
     print(f"  launched {args.nodes} nodes in {launch_elapsed:.2f}s")
 
+    # 2b. Start the background startup profiler (CPU vs time). Purely additive:
+    #     it samples /proc in its own thread while the unchanged steady-state
+    #     sampling below runs, so no existing metric shifts.
+    cpu_timeseries = []
+    prof_stop = threading.Event()
+    prof_thread = threading.Thread(
+        target=startup_profiler,
+        args=([p.pid for p in procs], daemon_pgid, t0, args.profile_interval,
+              prof_stop, cpu_timeseries),
+        daemon=True)
+    prof_thread.start()
+
     # 3. Let discovery settle, then sample steady-state RAM + CPU.
     time.sleep(args.settle)
     alive = [p.pid for p in procs if p.poll() is None]
@@ -160,6 +199,9 @@ def main():
             p.wait(timeout=max(1.0, deadline - time.monotonic()))
         except subprocess.TimeoutExpired:
             p.kill()
+    prof_stop.set()
+    prof_thread.join()  # the loop's only blocking call is a finite sleep, so this cannot hang
+    mem_total = measure.mem_total_mb()
     stop_daemon(daemon_pgid)
 
     # 5. Aggregate per-node results.
@@ -219,6 +261,8 @@ def main():
         "lat_mean_us": round(sum(pooled_lat) / len(pooled_lat), 1) if pooled_lat else None,
         "lat_max_us": round(max(pooled_lat), 1) if pooled_lat else None,
         "lat_samples": len(pooled_lat),
+        "mem_total_mb": mem_total,
+        "cpu_timeseries": cpu_timeseries,
         "config_files": spec.config_files,
         "notes": spec.notes,
     }

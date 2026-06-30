@@ -67,6 +67,11 @@ def pgid_members(pgid):
     return members
 
 
+def mem_total_mb():
+    """Total physical RAM (MB) from /proc/meminfo MemTotal, or 0 if unavailable."""
+    return round(_read_int_field("/proc/meminfo", "MemTotal:") / 1024.0, 1)
+
+
 def sample_memory(pids):
     """Point-in-time PSS/RSS totals (MB) across the given pids."""
     total_pss = sum(pss_kb(p) for p in pids)

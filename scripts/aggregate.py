@@ -30,6 +30,7 @@ CSV_FIELDS = [
     "ram_node_pss_mb", "ram_node_rss_mb", "ram_daemon_pss_mb", "ram_total_pss_mb",
     "ram_pss_per_node_mb", "cpu_total_pct", "cpu_daemon_pct", "cpu_per_node_pct",
     "lat_p50_us", "lat_p99_us", "lat_mean_us", "lat_max_us", "lat_samples",
+    "mem_total_mb",
 ]
 
 
