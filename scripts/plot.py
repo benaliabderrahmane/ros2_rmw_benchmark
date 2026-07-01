@@ -150,14 +150,19 @@ def plot_startup_cpu(data, variants, node_list, out):
             if not series:
                 continue
             xs = [s["t_s"] for s in series]
-            ys = [s["cpu_pct"] for s in series]
+            # log y-axis: the range spans unix_socket's ~150% plateau to the DDS
+            # storms' ~4000% peaks, and CPU hits 0 at the idle tails; floor at 1%
+            # so the tails don't fall off the log axis.
+            ys = [max(s["cpu_pct"], 1.0) for s in series]
             lw = 2.8 if v == "unix_socket" else 1.6
             z = 5 if v == "unix_socket" else 2
             ax.plot(xs, ys, lw=lw, color=COLORS.get(v), label=v, zorder=z)
         ax.set_title(f"Startup CPU vs time -- {n} nodes", fontsize=12)
         ax.set_xlabel("time since launch (s)")
-        ax.set_ylabel("CPU (%, 100 = 1 core)")
-        ax.grid(True, ls=":", alpha=0.4)
+        ax.set_ylabel("CPU (%, 100 = 1 core), log scale")
+        ax.set_yscale("log")
+        ax.set_ylim(1, 6000)
+        ax.grid(True, which="both", ls=":", alpha=0.4)
         ax.legend(fontsize=8, frameon=False)
     fig.tight_layout()
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
