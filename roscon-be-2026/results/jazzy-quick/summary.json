@@ -1,0 +1,69 @@
+{
+ "what": "Quick Jazzy runs for slide 11 (24 Nov 2026): performance_test 2.3.0 (Jazzy apt) Array4m 1 -> 5 and the ring's 64 KB shm phase at N=100, 3 runs each, medians via scripts/collect.py; image rmw-perf:jazzy-quick (Dockerfile here) on rmw-bench:jazzy-v0.6.0-rc; host not tuned (default governor). Peer links: 20,100 TCP connections at 200 processes (peer_links_launch_2026-11-23.txt).",
+ "perf_array4m_s5": {
+  "unix_socket": {
+   "runs": 3,
+   "mean_us": 2640.18,
+   "tail_us": 3067.61,
+   "delivered_pct": 100.0,
+   "cpu_pct": 28.1,
+   "pss_mb": 101.2
+  },
+  "zenoh_tuned": {
+   "runs": 3,
+   "mean_us": 2650.03,
+   "tail_us": 3179.62,
+   "delivered_pct": 100.0,
+   "cpu_pct": 28.8,
+   "pss_mb": 173.8
+  },
+  "zenoh_default": {
+   "runs": 3,
+   "mean_us": 8256.67,
+   "tail_us": 9866.69,
+   "delivered_pct": 100.0,
+   "cpu_pct": 94.0,
+   "pss_mb": 208.2
+  }
+ },
+ "ring_shm_n100": {
+  "unix_socket": {
+   "runs": 3,
+   "all_up_runs": 3,
+   "bringup_s": 0.31,
+   "bringup_min_s": 0.3,
+   "bringup_max_s": 0.31,
+   "nodes_up": 1.0,
+   "cpu_pct": 34.7,
+   "pss_mb": 349.4,
+   "lat_p50_us": 70.5,
+   "lat_p99_us": 102.1
+  },
+  "zenoh_tuned": {
+   "runs": 3,
+   "all_up_runs": 3,
+   "bringup_s": 5.42,
+   "bringup_min_s": 5.19,
+   "bringup_max_s": 5.99,
+   "nodes_up": 1.0,
+   "cpu_pct": 83.3,
+   "pss_mb": 20663.9,
+   "lat_p50_us": 173.5,
+   "lat_p99_us": 890.3
+  },
+  "zenoh_default": {
+   "runs": 3,
+   "all_up_runs": 3,
+   "bringup_s": 1.69,
+   "bringup_min_s": 1.68,
+   "bringup_max_s": 1.77,
+   "nodes_up": 1.0,
+   "cpu_pct": 76.0,
+   "pss_mb": 2818.2,
+   "lat_p50_us": 210.0,
+   "lat_p99_us": 536.5
+  }
+ },
+ "peer_links_200": 20100,
+ "client_links_200": 200
+}

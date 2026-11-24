@@ -1,0 +1,22 @@
+# iceoryx 2.0.6 (ROS 2 Lyrical): unchanged from ros2_rmw_benchmark configs/iox_roudi_config.toml (main 7a774e8);
+# the RouDi config format (version = 1) is the same in iceoryx 2.0.x. Ring only (cyclonedds_shm).
+# Iceoryx RouDi mempool config for the CycloneDDS shared-memory benchmark.
+# Sized for ~100 nodes exchanging 64 KiB FixedMsg samples (keep-last-10):
+# the 131072-byte pool holds one 64 KiB payload + Iceoryx headers per chunk.
+# ~520 MB of /dev/shm total (run with --ipc=host so the host's /dev/shm is used).
+[general]
+version = 1
+
+[[segment]]
+
+[[segment.mempool]]
+size = 1024
+count = 4096
+
+[[segment.mempool]]
+size = 16384
+count = 4096
+
+[[segment.mempool]]
+size = 131072
+count = 4096

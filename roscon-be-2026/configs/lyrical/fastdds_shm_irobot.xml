@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  fastdds_shm in the iRobot suite: Fast DDS 3.6.2 (ROS 2 Lyrical) port of the iRobot
+  benchmark profiles/shared_memory_fastdds_preallocated_w_realloc.xml (the Jazzy fastrtps "loaned" comm).
+  Same QoS: asynchronous publishing, data sharing AUTOMATIC, PREALLOCATED_WITH_REALLOC history memory.
+  Changes for Fast DDS 3: the <dds xmlns="http://www.eprosima.com"> root; the file is now passed with
+  FASTDDS_DEFAULT_PROFILES_FILE (Fast DDS 3 no longer reads FASTRTPS_DEFAULT_PROFILES_FILE).
+  As before, the test matrix sets RMW_FASTRTPS_USE_QOS_FROM_XML=1 and runs the *_loaned topologies.
+-->
+<dds xmlns="http://www.eprosima.com">
+  <profiles>
+    <data_writer profile_name="default publisher profile" is_default_profile="true">
+      <qos>
+        <publishMode>
+          <kind>ASYNCHRONOUS</kind>
+        </publishMode>
+        <data_sharing>
+          <kind>AUTOMATIC</kind>
+        </data_sharing>
+      </qos>
+      <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+    </data_writer>
+    <data_reader profile_name="default subscription profile" is_default_profile="true">
+      <qos>
+        <data_sharing>
+          <kind>AUTOMATIC</kind>
+        </data_sharing>
+      </qos>
+      <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+    </data_reader>
+  </profiles>
+</dds>

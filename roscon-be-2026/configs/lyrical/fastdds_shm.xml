@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Fast DDS 3.6.2 (ROS 2 Lyrical, rmw_fastrtps_cpp 9.4.10): unchanged from ros2_rmw_benchmark configs/fastdds_shm.xml (main 7a774e8).
+     The file already uses the <dds xmlns="http://www.eprosima.com"> root that Fast DDS 3 expects, and
+     mutation_tries and data_sharing keep their 2.x names. See benchmarks/CONFIGS.md. -->
+<!--
+  Fast DDS zero-copy data-sharing. data_sharing=AUTOMATIC makes the writer and
+  reader exchange samples through a shared-memory segment with no copy, when
+  they are on the same host and the type is plain/bounded (the benchmark's
+  fixed mode FixedMsg qualifies; std_msgs/String does not). Needs
+  RMW_FASTRTPS_USE_QOS_FROM_XML=1. mutation_tries raised so simple discovery
+  survives many participants (#5767). Compared against fastdds_default, which
+  already uses the SHM transport but copies (no data-sharing).
+-->
+<dds xmlns="http://www.eprosima.com">
+    <profiles>
+        <data_writer profile_name="bench_dw" is_default_profile="true">
+            <qos>
+                <data_sharing>
+                    <kind>AUTOMATIC</kind>
+                </data_sharing>
+            </qos>
+        </data_writer>
+        <data_reader profile_name="bench_dr" is_default_profile="true">
+            <qos>
+                <data_sharing>
+                    <kind>AUTOMATIC</kind>
+                </data_sharing>
+            </qos>
+        </data_reader>
+        <participant profile_name="bench_participant" is_default_profile="true">
+            <rtps>
+                <builtin>
+                    <mutation_tries>1000</mutation_tries>
+                </builtin>
+            </rtps>
+        </participant>
+    </profiles>
+</dds>

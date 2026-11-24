@@ -1,0 +1,11 @@
+=== 23:12:57 fastdds_tuned_clean r1
+fastdds_tuned_clean: up 12/200, all up at None s, restarts 591, peak CPU 3291.6% at 125.106 s, window 600.0 s, sampler max 4382.3 ms
+=== 23:23:38 fastdds_tuned_fixed r1
+fastdds_tuned_fixed: up 38/200, all up at None s, restarts 562, peak CPU 3062.0% at 123.673 s, window 600.0 s, sampler max 4512.8 ms
+=== 23:34:18 fastdds_bigbuf r1
+fastdds_bigbuf: up 29/200, all up at None s, restarts 544, peak CPU 3184.8% at 123.121 s, window 600.0 s, sampler max 3944.7 ms
+=== 23:45:00 fastdds_shmonly r1
+fastdds_shmonly: up 79/200, all up at None s, restarts 458, peak CPU 1637.5% at 86.002 s, window 600.0 s, sampler max 2078.9 ms
+=== 23:55:45 fastdds_announce r1
+fastdds_announce: up 24/200, all up at None s, restarts 573, peak CPU 2243.3% at 363.81 s, window 600.0 s, sampler max 3614.7 ms
+done: <talk>/benchmarks/results/fastdds-screen-jazzy-2026-11-23

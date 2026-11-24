@@ -1,0 +1,46 @@
+# performance_test image for the ROSCon Belgium 2026 latency and CPU slides. Build context: this folder (nothing is
+# copied). Base: the benchmark image from Dockerfile.ring (the RMWs from the distro's apt, iceoryx, ours in /bench_ws).
+#
+# Adds Apex performance_test where the campaign's runner (runners/run_case.py) and specs (scripts/gen_t5_specs.py)
+# expect it, /pt_ws/install/lib/performance_test/perf_test:
+# - PT_FROM=source (Lyrical, the slides): 2.4.0 built from source; Lyrical has no release. Its CMake only knows distros
+#   by name, so it is configured as "rolling", with two build-only fixes: rclcpp dropped the
+#   StaticSingleThreadedExecutor (its plugin is turned off, as upstream master does for rolling), and GCC 15 rejects
+#   a const-member assignment in the bundled rapidjson inside a never-instantiated template (-Wno-template-body).
+#   Lyrical also removed ament_target_dependencies(), which 2.4.0 still calls: Jazzy's own implementation is restored
+#   from compat/ when the distro lacks it, and CMake 4's floor for old cmake_minimum_required() is set for the build.
+# - PT_FROM=apt (Jazzy): the distro's own package (Jazzy: 2.3.0).
+# run_case.py also sources /ws and /show_ws: /ws is linked to /bench_ws (ours is built there), /show_ws is empty.
+ARG BASE=rmw-bench:lyrical-roscon
+FROM ${BASE}
+ARG PT_FROM=source
+ARG PERFORMANCE_TEST_REF=2.4.0
+ARG PERFORMANCE_TEST_REPO=https://gitlab.com/ApexAI/performance_test.git
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends sysstat procps psmisc \
+ && if [ "${PT_FROM}" = apt ]; then apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-performance-test; fi \
+ && rm -rf /var/lib/apt/lists/*
+COPY compat/ament_target_dependencies.cmake /tmp/compat/
+RUN T=/opt/ros/${ROS_DISTRO}/share/ament_cmake_target_dependencies/cmake; \
+    if [ "${PT_FROM}" = source ] && ! grep -rqs 'function(ament_target_dependencies' "$T"; then \
+      mkdir -p "$T" && cp /tmp/compat/ament_target_dependencies.cmake "$T/" \
+      && echo 'include("${ament_cmake_target_dependencies_DIR}/ament_target_dependencies.cmake")' >> "$T/ament_cmake_target_dependencies-extras.cmake"; \
+    fi
+RUN if [ "${PT_FROM}" = source ]; then \
+      git clone --depth 1 -b "${PERFORMANCE_TEST_REF}" "${PERFORMANCE_TEST_REPO}" /pt_ws/src/performance_test \
+      && cd /pt_ws/src/performance_test/performance_test \
+      && sed -i '/MATCHES "rolling")/,/endif()/s/PERFORMANCE_TEST_RCLCPP_SSTE_ENABLED ON/PERFORMANCE_TEST_RCLCPP_SSTE_ENABLED OFF/' CMakeLists.txt \
+      && cd /pt_ws && source /opt/ros/${ROS_DISTRO}/setup.bash \
+      && ROS_DISTRO=rolling CXXFLAGS=-Wno-template-body CMAKE_POLICY_VERSION_MINIMUM=3.5 colcon build --merge-install --packages-select performance_test \
+           --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+      && rm -rf /pt_ws/build /pt_ws/log \
+      && echo "performance_test ${PERFORMANCE_TEST_REF} (source)" > /PERFORMANCE_TEST_VERSION; \
+    else \
+      mkdir -p /pt_ws/install/lib/performance_test && touch /pt_ws/install/setup.bash \
+      && ln -s /opt/ros/${ROS_DISTRO}/lib/performance_test/perf_test /pt_ws/install/lib/performance_test/perf_test \
+      && dpkg-query -W -f='performance_test ${Version} (apt)\n' ros-${ROS_DISTRO}-performance-test > /PERFORMANCE_TEST_VERSION; \
+    fi \
+ && test -x /pt_ws/install/lib/performance_test/perf_test \
+ && ln -s /bench_ws /ws && mkdir -p /show_ws/install && touch /show_ws/install/setup.bash \
+ && cp /benchmarks/RMW_UNDER_TEST_SHA /RMW_UNDER_TEST_SHA

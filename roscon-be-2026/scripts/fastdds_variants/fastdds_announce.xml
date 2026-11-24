@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Screening candidate 3 (23 Nov 2026): fastdds_tuned plus more discovery announcements. A participant's first
+  DATA(p) replies can be discarded (eProsima/Fast-DDS#6630), delaying discovery by up to one announcement
+  period (3 s default). Here: 10 initial announcements 500 ms apart (default 5 x 100 ms, which ends before
+  most of 200 simultaneous participants exist) and a 1 s announcement period afterwards.
+-->
+<dds xmlns="http://www.eprosima.com">
+    <profiles>
+        <participant profile_name="bench_participant" is_default_profile="true">
+            <rtps>
+                <builtin>
+                    <discovery_config>
+                        <leaseAnnouncement>
+                            <sec>1</sec>
+                        </leaseAnnouncement>
+                        <initialAnnouncements>
+                            <count>10</count>
+                            <period>
+                                <nanosec>500000000</nanosec>
+                            </period>
+                        </initialAnnouncements>
+                    </discovery_config>
+                    <mutation_tries>1000</mutation_tries>
+                </builtin>
+            </rtps>
+        </participant>
+    </profiles>
+</dds>

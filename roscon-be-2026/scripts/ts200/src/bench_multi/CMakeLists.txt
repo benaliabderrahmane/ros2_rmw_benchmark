@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.10)
+project(bench_multi)
+set(CMAKE_CXX_STANDARD 17)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+add_executable(multi_node src/multi_node.cpp)
+target_link_libraries(multi_node rclcpp::rclcpp ${std_msgs_TARGETS})  # Lyrical has no ament_target_dependencies
+install(TARGETS multi_node DESTINATION lib/${PROJECT_NAME})
+ament_package()

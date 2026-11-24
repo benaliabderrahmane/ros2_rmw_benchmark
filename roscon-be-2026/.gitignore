@@ -1,0 +1,5 @@
+# reproduce/*.sh output and build products
+results-local/
+.build/
+specs/
+__pycache__/
