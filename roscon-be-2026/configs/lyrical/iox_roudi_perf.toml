@@ -1,0 +1,38 @@
+# iceoryx 2.0.6 RouDi mempools for cyclonedds_shm in performance_test (1 KB to 8 MB) and iRobot (10 B to 4 MB).
+# Derived from rmw-showcase profiles/roudi_config.toml (Jazzy, never used by a Cyclone variant there): that
+# file's largest pool was 5 MiB and several pools were exactly the payload size, which leaves no room for the
+# 64-byte iceoryx chunk header. Each pool here is the payload plus headroom, and the counts cover KEEP_LAST 16
+# on the writer plus 16 per reader at 1->5 (performance_test's default history depth is 16).
+# About 1.4 GB of /dev/shm: the perf containers run with --shm-size=4g.
+[general]
+version = 1
+
+[[segment]]
+
+[[segment.mempool]]
+size = 2048
+count = 4000
+
+[[segment.mempool]]
+size = 20480
+count = 2000
+
+[[segment.mempool]]
+size = 73728
+count = 1000
+
+[[segment.mempool]]
+size = 270336
+count = 500
+
+[[segment.mempool]]
+size = 1114112
+count = 200
+
+[[segment.mempool]]
+size = 4259840
+count = 128
+
+[[segment.mempool]]
+size = 8454144
+count = 48

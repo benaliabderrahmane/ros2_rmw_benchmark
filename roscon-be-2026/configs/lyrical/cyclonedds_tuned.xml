@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Cyclone DDS 11.0.1 (ROS 2 Lyrical) port of ros2_rmw_benchmark configs/cyclonedds_tuned.xml (main 7a774e8).
+  Every element still exists in Cyclone 11 with the same meaning, so the settings are unchanged:
+  loopback only, multicast for participant discovery only, no participant index, 65500 B UDP payloads.
+  Used by cyclonedds_tuned in all three benchmarks. See benchmarks/CONFIGS.md.
+-->
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/11.0.1/etc/cyclonedds.xsd">
+    <Domain id="any">
+        <General>
+            <Interfaces>
+                <NetworkInterface name="lo" multicast="true"/>
+            </Interfaces>
+            <AllowMulticast>spdp</AllowMulticast>
+            <MaxMessageSize>65500B</MaxMessageSize>
+        </General>
+        <Discovery>
+            <ParticipantIndex>none</ParticipantIndex>
+        </Discovery>
+    </Domain>
+</CycloneDDS>

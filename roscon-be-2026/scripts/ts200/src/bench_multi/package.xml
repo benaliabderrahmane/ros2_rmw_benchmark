@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>bench_multi</name>
+  <version>0.1.0</version>
+  <description>Benchmark node with several publishers and subscriptions and a ready file (ring time series, 200 nodes).</description>
+  <maintainer email="noreply@example.com">bench</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

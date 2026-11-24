@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  fastdds_shm in performance_test: Fast DDS 3.6.2 (ROS 2 Lyrical) port of rmw-showcase
+  profiles/shared_memory_fastdds_dynamic_reusable.xml (the Jazzy fastrtps_ds variant).
+  Same QoS: asynchronous publishing, data sharing AUTOMATIC, DYNAMIC_REUSABLE history memory.
+  Changes for Fast DDS 3: the <dds xmlns="http://www.eprosima.com"> root; the file is now passed with
+  FASTDDS_DEFAULT_PROFILES_FILE (Fast DDS 3 no longer reads FASTRTPS_DEFAULT_PROFILES_FILE).
+  The runner also sets FASTDDS_BUILTIN_TRANSPORTS=LARGE_DATA and publishes loaned samples (zero-copy).
+-->
+<dds xmlns="http://www.eprosima.com">
+  <profiles>
+    <data_writer profile_name="default publisher profile" is_default_profile="true">
+      <qos>
+        <publishMode>
+          <kind>ASYNCHRONOUS</kind>
+        </publishMode>
+        <data_sharing>
+          <kind>AUTOMATIC</kind>
+        </data_sharing>
+      </qos>
+      <historyMemoryPolicy>DYNAMIC_REUSABLE</historyMemoryPolicy>
+    </data_writer>
+    <data_reader profile_name="default subscription profile" is_default_profile="true">
+      <qos>
+        <data_sharing>
+          <kind>AUTOMATIC</kind>
+        </data_sharing>
+      </qos>
+      <historyMemoryPolicy>DYNAMIC_REUSABLE</historyMemoryPolicy>
+    </data_reader>
+  </profiles>
+</dds>

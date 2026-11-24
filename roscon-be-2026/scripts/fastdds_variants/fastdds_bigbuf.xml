@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Screening candidate 1 (23 Nov 2026): fastdds_tuned plus 16 MiB UDP socket buffers. Fast DDS leaves the
+  socket buffers at the OS default (net.core.rmem_default, ~208 KiB); a 200-participant discovery storm can
+  overflow that and drop SPDP/SEDP datagrams. The host allows up to 2 GiB (rmem_max).
+  Fast DDS 2.14 ignored the participant-level send/listenSocketBufferSize here (sockets stayed at 212992), so the
+  default transport set (UDPv4 + SHM) is declared explicitly with the buffer sizes on the UDP descriptor.
+-->
+<dds xmlns="http://www.eprosima.com">
+    <profiles>
+        <transport_descriptors>
+            <transport_descriptor>
+                <transport_id>udp_bigbuf</transport_id>
+                <type>UDPv4</type>
+                <sendBufferSize>16777216</sendBufferSize>
+                <receiveBufferSize>16777216</receiveBufferSize>
+            </transport_descriptor>
+            <transport_descriptor>
+                <transport_id>shm_default</transport_id>
+                <type>SHM</type>
+            </transport_descriptor>
+        </transport_descriptors>
+        <participant profile_name="bench_participant" is_default_profile="true">
+            <rtps>
+                <userTransports>
+                    <transport_id>udp_bigbuf</transport_id>
+                    <transport_id>shm_default</transport_id>
+                </userTransports>
+                <useBuiltinTransports>false</useBuiltinTransports>
+                <builtin>
+                    <mutation_tries>1000</mutation_tries>
+                </builtin>
+            </rtps>
+        </participant>
+    </profiles>
+</dds>

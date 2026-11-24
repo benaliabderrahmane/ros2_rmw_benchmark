@@ -1,0 +1,9 @@
+# Context is the repository root; the image needs bench_nodes/ and scripts/ only (configs come from a named context).
+.git
+results
+roscon-be-2026
+**/build
+**/install
+**/log
+**/__pycache__
+*.pyc
